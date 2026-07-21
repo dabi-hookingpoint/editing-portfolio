@@ -1,4 +1,4 @@
-# Astro Starter Kit: Minimal
+# 편집실 포트폴리오 (Astro + Supabase)
 
 ```sh
 npm create astro@latest -- --template minimal
