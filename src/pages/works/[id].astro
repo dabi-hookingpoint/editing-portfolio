@@ -1,0 +1,170 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, getEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+	const works = await getCollection('works');
+	return works.map((work) => ({
+		params: { id: work.id },
+	}));
+}
+
+const { id } = Astro.params;
+const work = await getEntry('works', id);
+const {
+	image,
+	title,
+	releaseYear,
+	genre,
+	type,
+	synopsis,
+	releaseDate,
+	airPeriod,
+	director,
+	writer,
+	cast,
+	watchLink,
+} = work.data;
+---
+
+<Layout title={`${title} - 편집실 포트폴리오`}>
+	<a class="watch-link" href={watchLink.url} target="_blank" rel="noopener noreferrer">
+		{watchLink.label} ↗
+	</a>
+
+	<div class="detail-grid">
+		<img class="poster" src={image} alt={title} />
+
+		<div class="info">
+			<h1>{title} <span class="year">({releaseYear})</span></h1>
+
+			<section>
+				<h2>소개</h2>
+				<details>
+					<summary>{synopsis.slice(0, 60)}… <span class="more">더보기</span></summary>
+					<p>{synopsis}</p>
+				</details>
+			</section>
+
+			<section>
+				<h2>장르</h2>
+				<p>{genre}</p>
+			</section>
+
+			<hr />
+
+			<section>
+				<h2>{type === '드라마' ? '방영기간' : '개봉일'}</h2>
+				<p>{type === '드라마' ? `${airPeriod.start} ~ ${airPeriod.end}` : releaseDate}</p>
+			</section>
+
+			<hr />
+
+			<section>
+				<h2>연출</h2>
+				<p>{director}</p>
+			</section>
+
+			<section>
+				<h2>극본</h2>
+				<p>{writer}</p>
+			</section>
+
+			<section>
+				<h2>출연진</h2>
+				<p>{cast.join(', ')}</p>
+			</section>
+
+			<a class="editing-link" href={`/works/${id}/editing`}>편집 상세 보기 →</a>
+		</div>
+	</div>
+
+	<a class="back-link" href="/">← 목록으로</a>
+</Layout>
+
+<style>
+	.watch-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		border: 1px solid #fff;
+		border-radius: 4px;
+		padding: 0.7rem 1.2rem;
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.9rem;
+		margin-bottom: 2.5rem;
+	}
+	.watch-link:hover {
+		background: #fff;
+		color: #000;
+	}
+
+	.detail-grid {
+		display: grid;
+		grid-template-columns: minmax(240px, 380px) 1fr;
+		gap: 3rem;
+		margin-bottom: 2rem;
+	}
+	@media (max-width: 700px) {
+		.detail-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.poster {
+		width: 100%;
+		border-radius: 8px;
+		object-fit: cover;
+	}
+
+	.info h1 {
+		margin-top: 0;
+		font-size: 1.6rem;
+	}
+	.info .year {
+		font-weight: 400;
+		opacity: 0.6;
+	}
+
+	.info section {
+		margin-bottom: 1.4rem;
+	}
+	.info h2 {
+		font-size: 1rem;
+		margin: 0 0 0.5rem;
+	}
+	.info p,
+	.info summary,
+	.info details p {
+		margin: 0;
+		color: #ccc;
+		font-size: 0.95rem;
+	}
+	.info summary {
+		cursor: pointer;
+		list-style: none;
+	}
+	.info summary::-webkit-details-marker {
+		display: none;
+	}
+	.info .more {
+		color: #888;
+		text-decoration: underline;
+	}
+	.info details[open] summary {
+		display: none;
+	}
+
+	.info hr {
+		border: none;
+		border-top: 1px solid #333;
+		margin: 1.5rem 0;
+	}
+
+	.editing-link {
+		display: inline-block;
+		margin-top: 0.5rem;
+		text-decoration: underline;
+	}
+</style>
