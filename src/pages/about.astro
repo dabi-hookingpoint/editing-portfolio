@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="About — Hooking Point">
+	<div class="page about">
+		<h1>ABOUT</h1>
+		<p class="lead">(회사 소개 문단 작성 예정 — 알려주시면 반영할게요)</p>
+		<p>
+			(편집실에서 쌓아온 이야기 감각이 어떻게 IP기획으로 이어지는지에 대한 스토리를 작성해주시면 이 자리에
+			넣을게요. 예: 어떤 작품들을 거치며 어떤 관점을 갖게 되었는지, 왜 편집을 넘어 이야기 기획까지 확장하게
+			되었는지 등.)
+		</p>
+	</div>
+</Layout>
+
+<style>
+	.about {
+		padding-top: 1rem;
+		max-width: 42rem;
+	}
+	.lead {
+		font-size: 1.2rem;
+		color: var(--fg);
+	}
+	.about p {
+		line-height: 1.8;
+		color: var(--muted);
+	}
+</style>

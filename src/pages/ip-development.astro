@@ -1,0 +1,193 @@
+---
+import Layout from '../layouts/Layout.astro';
+import projects from '../content/ip-projects.json';
+---
+
+<Layout title="IP Development — Hooking Point">
+	<div class="page">
+		<h1>IP DEVELOPMENT</h1>
+		<p class="intro">현재 개발 중인 오리지널 IP입니다. 상세 시놉시스는 공개하지 않으며, 자료가 필요하시면 자료 요청을 남겨주세요.</p>
+
+		<ul class="ip-grid">
+			{projects.map((p) => (
+				<li>
+					<button
+						type="button"
+						class="ip-card"
+						data-title={p.title}
+						data-genre={p.genre}
+						data-stage={p.stage}
+						data-logline={p.logline}
+					>
+						<span class="poster-placeholder" aria-hidden="true"></span>
+						<span class="stage-badge">{p.stage}</span>
+						<span class="ip-title">{p.title}</span>
+						<span class="ip-genre">{p.genre}</span>
+					</button>
+				</li>
+			))}
+		</ul>
+	</div>
+
+	<dialog id="ip-dialog">
+		<button type="button" id="ip-dialog-close" aria-label="닫기">✕</button>
+		<span class="dialog-stage" id="ip-dialog-stage"></span>
+		<h2 id="ip-dialog-title"></h2>
+		<p class="dialog-genre" id="ip-dialog-genre"></p>
+		<p class="dialog-logline" id="ip-dialog-logline"></p>
+		<a id="ip-dialog-request" class="request-btn" href="#">자료 요청 →</a>
+	</dialog>
+</Layout>
+
+<script>
+	const dialog = document.getElementById('ip-dialog') as HTMLDialogElement;
+	const closeBtn = document.getElementById('ip-dialog-close');
+	const titleEl = document.getElementById('ip-dialog-title');
+	const genreEl = document.getElementById('ip-dialog-genre');
+	const stageEl = document.getElementById('ip-dialog-stage');
+	const loglineEl = document.getElementById('ip-dialog-logline');
+	const requestEl = document.getElementById('ip-dialog-request') as HTMLAnchorElement;
+
+	document.querySelectorAll<HTMLButtonElement>('.ip-card').forEach((card) => {
+		card.addEventListener('click', () => {
+			const { title, genre, stage, logline } = card.dataset;
+			if (titleEl) titleEl.textContent = title ?? '';
+			if (genreEl) genreEl.textContent = genre ?? '';
+			if (stageEl) stageEl.textContent = stage ?? '';
+			if (loglineEl) loglineEl.textContent = logline ?? '';
+			if (requestEl) {
+				requestEl.href = `mailto:contact@hookingpoint.kr?subject=${encodeURIComponent(`[${title}] 자료 요청`)}`;
+			}
+			dialog.showModal();
+		});
+	});
+
+	closeBtn?.addEventListener('click', () => dialog.close());
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) dialog.close();
+	});
+</script>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.intro {
+		color: var(--muted);
+		max-width: 40rem;
+		margin: 0 0 2.5rem;
+	}
+
+	.ip-grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1.5rem;
+	}
+	.ip-card {
+		font: inherit;
+		text-align: left;
+		width: 100%;
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 0;
+		overflow: hidden;
+		cursor: pointer;
+		color: inherit;
+		display: flex;
+		flex-direction: column;
+		transition: border-color 0.15s ease, transform 0.15s ease;
+	}
+	.ip-card:hover {
+		border-color: var(--accent);
+		transform: translateY(-2px);
+	}
+	.poster-placeholder {
+		display: block;
+		aspect-ratio: 2 / 3;
+		background: linear-gradient(160deg, var(--border), var(--bg));
+	}
+	.stage-badge {
+		align-self: flex-start;
+		margin: 1rem 1rem 0;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		color: var(--accent);
+		border: 1px solid var(--accent);
+		border-radius: 999px;
+		padding: 0.2rem 0.6rem;
+	}
+	.ip-title {
+		margin: 0.8rem 1rem 0.2rem;
+		font-weight: 700;
+	}
+	.ip-genre {
+		margin: 0 1rem 1rem;
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+
+	dialog {
+		max-width: 28rem;
+		width: 90vw;
+		background: var(--bg);
+		color: var(--fg);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 2rem;
+	}
+	dialog::backdrop {
+		background: rgba(0, 0, 0, 0.6);
+	}
+	#ip-dialog-close {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		background: none;
+		border: none;
+		color: var(--muted);
+		font-size: 1.1rem;
+		cursor: pointer;
+	}
+	#ip-dialog-close:hover {
+		color: var(--fg);
+	}
+	.dialog-stage {
+		display: inline-block;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		color: var(--accent);
+		border: 1px solid var(--accent);
+		border-radius: 999px;
+		padding: 0.2rem 0.6rem;
+		margin-bottom: 1rem;
+	}
+	#ip-dialog-title {
+		margin: 0 0 0.3rem;
+	}
+	.dialog-genre {
+		margin: 0 0 1.2rem;
+		color: var(--muted);
+	}
+	.dialog-logline {
+		margin: 0 0 1.5rem;
+		line-height: 1.6;
+	}
+	.request-btn {
+		display: inline-block;
+		border: 1px solid var(--accent);
+		background: var(--accent);
+		color: #fff;
+		border-radius: 4px;
+		padding: 0.7rem 1.2rem;
+		font-weight: 600;
+	}
+	.request-btn:hover {
+		opacity: 0.85;
+	}
+</style>

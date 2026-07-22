@@ -3,62 +3,125 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+const types = ['전체', ...new Set(works.map((w) => w.data.type))];
 ---
 
-<Layout title="Hooking point EDIT filmography">
-	<a class="back-link" href="/">← 홈으로</a>
-	<h1>Hooking point EDIT filmography</h1>
-	<ul class="work-list">
-		{works.map((work) => (
-			<li class="work-card">
-				<a href={`/works/${work.id}`}>
-					<img src={work.data.image} alt={work.data.title} width="120" height="160" />
-					<div>
-						<h2>{work.data.title} <span class="year">({work.data.releaseYear})</span></h2>
-						<p>{work.data.genre}</p>
-					</div>
-				</a>
-			</li>
-		))}
-	</ul>
+<Layout title="EDITING / WORKS — Hooking Point">
+	<div class="page">
+		<a class="back-link" href="/">← 홈으로</a>
+		<h1>EDITING / WORKS</h1>
+
+		<div class="filters" role="tablist">
+			{types.map((t, i) => (
+				<button type="button" class="filter" data-filter={t} aria-pressed={i === 0 ? 'true' : 'false'}>
+					{t}
+				</button>
+			))}
+		</div>
+
+		<ul class="work-grid">
+			{works.map((work) => (
+				<li class="work-card" data-type={work.data.type}>
+					<a href={`/works/${work.id}`}>
+						<img src={work.data.image} alt={work.data.title} loading="lazy" />
+						<div class="work-meta">
+							<h2>{work.data.title}</h2>
+							<p class="year">{work.data.releaseYear}</p>
+						</div>
+					</a>
+				</li>
+			))}
+		</ul>
+	</div>
 </Layout>
 
+<script>
+	const filters = document.querySelectorAll<HTMLButtonElement>('.filter');
+	const cards = document.querySelectorAll<HTMLLIElement>('.work-card');
+
+	filters.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			filters.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+			btn.setAttribute('aria-pressed', 'true');
+			const target = btn.dataset.filter;
+			cards.forEach((card) => {
+				const show = target === '전체' || card.dataset.type === target;
+				card.style.display = show ? '' : 'none';
+			});
+		});
+	});
+</script>
+
 <style>
-	.work-list {
+	h1 {
+		margin-bottom: 2rem;
+	}
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin-bottom: 2rem;
+	}
+	.filter {
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
+		background: none;
+		border: 1px solid var(--border);
+		color: var(--muted);
+		border-radius: 999px;
+		padding: 0.5rem 1.1rem;
+		cursor: pointer;
+		transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+	}
+	.filter:hover {
+		border-color: var(--accent);
+		color: var(--fg);
+	}
+	.filter[aria-pressed='true'] {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+
+	.work-grid {
 		list-style: none;
 		padding: 0;
+		margin: 0;
 		display: grid;
-		gap: 1.2rem;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 1.5rem;
 	}
 	.work-card {
-		border: 1px solid #333;
-		border-radius: 8px;
-		transition: border-color 0.15s ease;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		overflow: hidden;
+		transition: border-color 0.15s ease, transform 0.15s ease;
 	}
 	.work-card:hover {
-		border-color: #777;
+		border-color: var(--accent);
+		transform: translateY(-2px);
 	}
 	.work-card a {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-		padding: 1rem;
-		text-decoration: none;
+		display: block;
 	}
 	.work-card img {
+		width: 100%;
+		aspect-ratio: 2 / 3;
 		object-fit: cover;
-		border-radius: 4px;
-		background: #111;
+		background: var(--border);
+		display: block;
 	}
-	.work-card h2 {
+	.work-meta {
+		padding: 1rem;
+	}
+	.work-meta h2 {
 		margin: 0 0 0.3rem;
-		font-size: 1.1rem;
+		font-size: 1rem;
 	}
-	.work-card .year {
-		font-weight: 400;
-	}
-	.work-card p {
+	.work-meta .year {
 		margin: 0;
-		color: #fff;
+		font-size: 0.85rem;
+		color: var(--muted);
 	}
 </style>

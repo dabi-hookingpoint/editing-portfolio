@@ -15,11 +15,13 @@ const { title, releaseYear, editingApproach } = work.data;
 ---
 
 <Layout title={`${title} 편집 상세 - 편집실 포트폴리오`}>
-	<a class="back-link" href={`/works/${id}`}>← {title} 작품 상세로</a>
-	<article>
-		<h1>{title} <span class="year">({releaseYear})</span> 편집 노트</h1>
-		<p>{editingApproach}</p>
-	</article>
+	<div class="page">
+		<a class="back-link" href={`/works/${id}`}>← {title} 작품 상세로</a>
+		<article>
+			<h1>{title} <span class="year">({releaseYear})</span> 편집 노트</h1>
+			<p>{editingApproach}</p>
+		</article>
+	</div>
 </Layout>
 
 <style>
@@ -31,7 +33,7 @@ const { title, releaseYear, editingApproach } = work.data;
 		font-weight: 400;
 	}
 	article p {
-		color: #fff;
+		color: var(--fg);
 		font-size: 1rem;
 		max-width: 640px;
 	}

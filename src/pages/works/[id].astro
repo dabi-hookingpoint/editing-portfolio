@@ -29,6 +29,7 @@ const {
 ---
 
 <Layout title={`${title} - 편집실 포트폴리오`}>
+	<div class="page">
 	{watchLink.url === '#' ? (
 		<span class="watch-link watch-link-static">{watchLink.label}</span>
 	) : (
@@ -87,6 +88,7 @@ const {
 	</div>
 
 	<a class="back-link" href="/filmography">← 목록으로</a>
+	</div>
 </Layout>
 
 <style>
@@ -94,24 +96,27 @@ const {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
-		border: 1px solid #fff;
+		border: 1px solid var(--accent);
 		border-radius: 4px;
 		padding: 0.7rem 1.2rem;
 		text-decoration: none;
 		font-weight: 600;
 		font-size: 0.9rem;
 		margin-bottom: 2.5rem;
+		color: var(--accent);
 	}
 	.watch-link:hover {
-		background: #fff;
-		color: #000;
+		background: var(--accent);
+		color: #fff;
 	}
 	.watch-link-static {
 		cursor: default;
+		border-color: var(--border);
+		color: var(--muted);
 	}
 	.watch-link-static:hover {
 		background: none;
-		color: #fff;
+		color: var(--muted);
 	}
 
 	.detail-grid {
@@ -149,13 +154,13 @@ const {
 	}
 	.info p {
 		margin: 0;
-		color: #fff;
+		color: var(--fg);
 		font-size: 0.95rem;
 	}
 
 	.info hr {
 		border: none;
-		border-top: 1px solid #333;
+		border-top: 1px solid var(--border);
 		margin: 1.5rem 0;
 	}
 
