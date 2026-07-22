@@ -21,6 +21,7 @@ const {
 	releaseDate,
 	airPeriod,
 	director,
+	productionCompany,
 	writer,
 	cast,
 	watchLink,
@@ -64,6 +65,7 @@ const {
 			<section>
 				<h2>연출</h2>
 				<p>{director}</p>
+				<p class="production-company">{productionCompany}</p>
 			</section>
 
 			<section>
@@ -145,6 +147,10 @@ const {
 		margin: 0;
 		color: #fff;
 		font-size: 0.95rem;
+	}
+	.info .production-company {
+		margin-top: 0.2rem;
+		font-size: 0.8rem;
 	}
 
 	.info hr {
