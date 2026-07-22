@@ -3,7 +3,7 @@
 -- the delete below cleans those up if present.
 alter table works add column if not exists festivals text[];
 alter table works drop constraint if exists works_type_check;
-alter table works add constraint works_type_check check (type in ('영화', '드라마', '다큐멘터리'));
+alter table works add constraint works_type_check check (type in ('영화', '드라마'));
 
 -- Remove the 2 short films that were cancelled (no-op if never inserted)
 delete from works where id in ('eomma-geukhyeom', 'yuksang-ui-jeonseol');
@@ -20,7 +20,7 @@ insert into works (
 (
   'a-long-way-around', '/images/works/a-long-way-around.png', '에움길', 2019, '다큐멘터리',
   '(편집 포인트 작성 예정 — 알려주시면 반영할게요)',
-  '다큐멘터리',
+  '영화',
   '일본군 성노예제 피해자 이옥선 할머니의 내레이션으로 전하는 삶의 기록. 나눔의 집에서 2000년대 초반부터 20여 년간 촬영해온 영상 1600여 점 중에서 선별한 장면들로, 굽어굽어 멀리 돌아가는 ''에움길'' 같았던 할머니들의 시간을 담았다.',
   '2019.06.20', null, null, '이승현', '(정보 확인 필요 — 알려주시면 반영할게요)', '(정보 확인 필요 — 알려주시면 반영할게요)', array['이옥선','이용수','김순덕','강일출'],
   '씨네21에서 보기', 'https://cine21.com/movie/info/?movie_id=54799',

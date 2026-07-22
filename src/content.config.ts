@@ -6,7 +6,7 @@ const workSchema = z.object({
   releaseYear: z.number(),
   genre: z.string(),
   editingApproach: z.string(),
-  type: z.enum(['영화', '드라마', '다큐멘터리']),
+  type: z.enum(['영화', '드라마']),
   synopsis: z.string(),
   releaseDate: z.string().optional(),
   airPeriod: z.object({ start: z.string(), end: z.string() }).optional(),
