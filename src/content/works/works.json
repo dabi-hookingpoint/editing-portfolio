@@ -76,6 +76,31 @@
     "sortOrder": 3
   },
   {
+    "id": "dirty-money",
+    "image": "/images/works/dirty-money.png",
+    "title": "더러운 돈에 손대지 마라",
+    "releaseYear": 2024,
+    "genre": "범죄, 느와르",
+    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
+    "type": "영화",
+    "synopsis": "우연히 범죄 조직의 검은돈에 대한 정보를 입수한 형사 '명득'과 '동혁'은 인생 역전을 위해 신고도 추적도 불가능한 그 돈을 훔치기로 계획한다. 그러나 완벽하다고 믿었던 계획은 잠입 수사 중이던 형사의 죽음으로 꼬이기 시작하고, 조직과 경찰 양쪽으로부터 쫓기는 신세가 된다.",
+    "releaseDate": "2024.10.17",
+    "director": "김민수",
+    "productionCompany": "리양필름",
+    "writer": "김민수",
+    "cast": [
+      "정우",
+      "김대명",
+      "박병은",
+      "조현철"
+    ],
+    "watchLink": {
+      "label": "티빙에서 보기",
+      "url": "https://www.tving.com/contents/M000378117"
+    },
+    "sortOrder": 4
+  },
+  {
     "id": "joseon-attorney",
     "image": "/images/works/joseon-attorney.png",
     "title": "조선변호사",
@@ -100,6 +125,87 @@
       "label": "웨이브에서 보기",
       "url": "https://www.wavve.com"
     },
-    "sortOrder": 4
+    "sortOrder": 5
+  },
+  {
+    "id": "ingan-siljyeok",
+    "image": "/images/works/ingan-siljyeok.png",
+    "title": "인간실격",
+    "releaseYear": 2021,
+    "genre": "로맨스 멜로",
+    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
+    "type": "드라마",
+    "synopsis": "대필 작가를 꿈꿨지만 삶의 이유를 잃어버린 '부정'과, 부자의 삶을 꿈꾸며 역할대행 서비스를 운영하지만 무엇 하나 이루지 못한 '강재'가 서로 얽히게 되는 이야기. 빛을 향해 최선을 다해 걸어왔지만 문득 아무것도 되지 못했다는 것을 깨닫는 평범한 두 사람의 삶을 그린다.",
+    "airPeriod": {
+      "start": "2021.09.04",
+      "end": "2021.10.24"
+    },
+    "director": "허진호, 박홍수",
+    "productionCompany": "씨제스엔터테인먼트, 드라마하우스스튜디오",
+    "writer": "김지혜",
+    "cast": [
+      "전도연",
+      "류준열",
+      "박병은",
+      "김효진"
+    ],
+    "watchLink": {
+      "label": "티빙에서 보기",
+      "url": "https://www.tving.com/contents/P001506481"
+    },
+    "sortOrder": 6
+  },
+  {
+    "id": "night-of-the-undead",
+    "image": "/images/works/night-of-the-undead.png",
+    "title": "죽지 않는 인간들의 밤",
+    "releaseYear": 2020,
+    "genre": "코미디, 스릴러",
+    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
+    "type": "영화",
+    "synopsis": "신혼의 단꿈에 빠져있던 '소희'는 하루 21시간 쉬지 않고 활동하는 남편 '만길'이 자신을 죽이려 한다는 사실을 알게 된다. 고등학교 동창 '세라', 우연히 합류한 '양선', 미스터리 연구소장 '닥터 장'과 함께 반격에 나서지만, 만길의 정체가 지구를 차지하러 온 외계인임이 밝혀지며 대결은 전대미문의 상황으로 커진다.",
+    "releaseDate": "2020.09.29",
+    "director": "신정원",
+    "productionCompany": "TCO(주)더콘텐츠온, 브라더픽쳐스",
+    "writer": "신정원, 장항준",
+    "cast": [
+      "이정현",
+      "김성오",
+      "서영희",
+      "양동근"
+    ],
+    "watchLink": {
+      "label": "씨네21에서 보기",
+      "url": "https://cine21.com/movie/info/?movie_id=54194"
+    },
+    "sortOrder": 7
+  },
+  {
+    "id": "the-cursed",
+    "image": "/images/works/the-cursed.png",
+    "title": "방법",
+    "releaseYear": 2020,
+    "genre": "미스터리 스릴러",
+    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
+    "type": "드라마",
+    "synopsis": "국내 최대 IT기업 '포레스트'의 비밀을 파헤치려는 사회부 기자 '임진희'가, 강력한 신기와 특별한 능력을 가진 소녀 '백소진'을 만나면서 불의에 맞서 싸우게 되는 미스터리 스릴러.",
+    "airPeriod": {
+      "start": "2020.02.10",
+      "end": "2020.03.17"
+    },
+    "director": "김용완",
+    "productionCompany": "레진 스튜디오",
+    "writer": "연상호",
+    "cast": [
+      "엄지원",
+      "정지소",
+      "성동일",
+      "조민수"
+    ],
+    "watchLink": {
+      "label": "티빙에서 보기",
+      "url": "https://www.tving.com/contents/P001153248"
+    },
+    "sortOrder": 8
   }
 ]
