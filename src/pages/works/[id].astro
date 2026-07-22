@@ -96,17 +96,19 @@ const {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
-		border: 1px solid var(--accent);
+		border: 1px solid var(--heading);
 		border-radius: 4px;
 		padding: 0.7rem 1.2rem;
 		text-decoration: none;
 		font-weight: 600;
 		font-size: 0.9rem;
 		margin-bottom: 2.5rem;
-		color: var(--accent);
+		color: var(--heading);
+		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 	}
 	.watch-link:hover {
 		background: var(--accent);
+		border-color: var(--accent);
 		color: #fff;
 	}
 	.watch-link-static {
@@ -168,5 +170,6 @@ const {
 		display: inline-block;
 		margin-top: 0.5rem;
 		text-decoration: underline;
+		color: var(--heading);
 	}
 </style>

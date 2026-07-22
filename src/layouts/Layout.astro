@@ -30,22 +30,27 @@ const currentPath = Astro.url.pathname;
 		/>
 		<style is:global>
 			:root {
-				color-scheme: dark;
+				color-scheme: light;
 				font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto,
 					'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
 
-				--bg: #0f1c3f;
-				--fg: #f4f5f7;
-				--muted: #aab4cc;
-				--accent: #5b8def;
-				--accent-dim: rgba(91, 141, 239, 0.16);
-				--border: #29396b;
+				--bg: #edf1f7;
+				--fg: #2e3552;
+				--muted: #5c6b8a;
+				--heading: #2a3b8f;
+				--accent: #ff6b4a;
+				--accent-dim: rgba(255, 107, 74, 0.12);
+				--border: #d7deea;
 			}
 			body {
 				margin: 0;
 				line-height: 1.6;
 				background: var(--bg);
 				color: var(--fg);
+			}
+			h1,
+			h2 {
+				color: var(--heading);
 			}
 			a {
 				color: inherit;
@@ -70,6 +75,7 @@ const currentPath = Astro.url.pathname;
 				letter-spacing: 0.15em;
 				font-size: 0.95rem;
 				flex-shrink: 0;
+				color: var(--heading);
 			}
 			.site-nav {
 				display: flex;
@@ -87,7 +93,7 @@ const currentPath = Astro.url.pathname;
 				color: var(--fg);
 			}
 			.site-nav a[aria-current='page'] {
-				color: var(--accent);
+				color: var(--heading);
 			}
 			.back-link {
 				display: inline-block;

@@ -124,6 +124,7 @@ import projects from '../content/ip-projects.json';
 	.ip-title {
 		margin: 0.8rem 1rem 0.2rem;
 		font-weight: 700;
+		color: var(--heading);
 	}
 	.ip-genre {
 		margin: 0 1rem 1rem;
@@ -180,14 +181,17 @@ import projects from '../content/ip-projects.json';
 	}
 	.request-btn {
 		display: inline-block;
-		border: 1px solid var(--accent);
-		background: var(--accent);
-		color: #fff;
+		border: 1px solid var(--heading);
+		background: none;
+		color: var(--heading);
 		border-radius: 4px;
 		padding: 0.7rem 1.2rem;
 		font-weight: 600;
+		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 	}
 	.request-btn:hover {
-		opacity: 0.85;
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
 	}
 </style>

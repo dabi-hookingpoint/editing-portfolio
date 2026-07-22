@@ -23,15 +23,17 @@ const email = 'contact@hookingpoint.kr';
 	}
 	.email-btn {
 		display: inline-block;
-		border: 1px solid var(--accent);
+		border: 1px solid var(--heading);
 		border-radius: 4px;
 		padding: 0.9rem 1.5rem;
 		font-weight: 700;
 		font-size: 1.1rem;
-		color: var(--accent);
+		color: var(--heading);
+		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 	}
 	.email-btn:hover {
 		background: var(--accent);
+		border-color: var(--accent);
 		color: #fff;
 	}
 </style>
