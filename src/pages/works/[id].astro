@@ -44,10 +44,7 @@ const {
 
 			<section>
 				<h2>소개</h2>
-				<details>
-					<summary>{synopsis.slice(0, 60)}… <span class="more">더보기</span></summary>
-					<p>{synopsis}</p>
-				</details>
+				<p>{synopsis}</p>
 			</section>
 
 			<section>
@@ -144,26 +141,10 @@ const {
 		font-size: 1rem;
 		margin: 0 0 0.5rem;
 	}
-	.info p,
-	.info summary,
-	.info details p {
+	.info p {
 		margin: 0;
 		color: #fff;
 		font-size: 0.95rem;
-	}
-	.info summary {
-		cursor: pointer;
-		list-style: none;
-	}
-	.info summary::-webkit-details-marker {
-		display: none;
-	}
-	.info .more {
-		color: #fff;
-		text-decoration: underline;
-	}
-	.info details[open] summary {
-		display: none;
 	}
 
 	.info hr {
