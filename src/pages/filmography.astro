@@ -93,13 +93,16 @@ const types = ['전체', ...new Set(works.map((w) => w.data.type))];
 		gap: 1.5rem;
 	}
 	.work-card {
+		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		overflow: hidden;
-		transition: border-color 0.15s ease, transform 0.15s ease;
+		box-shadow: var(--shadow);
+		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 	}
 	.work-card:hover {
 		border-color: var(--accent);
+		box-shadow: var(--shadow-hover);
 		transform: translateY(-2px);
 	}
 	.work-card a {

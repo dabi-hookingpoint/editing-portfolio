@@ -90,7 +90,7 @@ import projects from '../content/ip-projects.json';
 		font: inherit;
 		text-align: left;
 		width: 100%;
-		background: none;
+		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		padding: 0;
@@ -99,10 +99,12 @@ import projects from '../content/ip-projects.json';
 		color: inherit;
 		display: flex;
 		flex-direction: column;
-		transition: border-color 0.15s ease, transform 0.15s ease;
+		box-shadow: var(--shadow);
+		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 	}
 	.ip-card:hover {
 		border-color: var(--accent);
+		box-shadow: var(--shadow-hover);
 		transform: translateY(-2px);
 	}
 	.poster-placeholder {
@@ -135,11 +137,12 @@ import projects from '../content/ip-projects.json';
 	dialog {
 		max-width: 28rem;
 		width: 90vw;
-		background: var(--bg);
+		background: var(--surface);
 		color: var(--fg);
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		padding: 2rem;
+		box-shadow: var(--shadow-hover);
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.6);
