@@ -5,7 +5,23 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="관리자 — Hooking Point">
 	<div class="page admin-page">
 		<h1>ADMIN</h1>
-		<p id="admin-auth-msg" class="auth-msg" hidden>관리자 권한이 필요합니다. <a href="/login">로그인</a></p>
+
+		<div id="admin-login-wrap" class="admin-login-wrap" hidden>
+			<form id="admin-login-form" class="admin-login-form">
+				<div class="field">
+					<label for="admin-login-email">이메일</label>
+					<input type="email" id="admin-login-email" name="email" required placeholder="관리자 이메일" />
+				</div>
+				<div class="field">
+					<label for="admin-login-password">비밀번호</label>
+					<input type="password" id="admin-login-password" name="password" required placeholder="비밀번호" />
+				</div>
+				<p id="admin-login-error" class="error" hidden></p>
+				<button type="submit" class="auth-btn">로그인</button>
+			</form>
+		</div>
+
+		<p id="admin-denied-msg" class="auth-msg" hidden>이 계정은 관리자 권한이 없습니다.</p>
 
 		<div id="admin-content" hidden>
 			<div class="admin-header">
@@ -93,15 +109,30 @@ import Layout from '../layouts/Layout.astro';
 <script>
 	import { supabase } from '../lib/supabase';
 
-	const authMsg = document.getElementById('admin-auth-msg');
+	const loginWrap = document.getElementById('admin-login-wrap');
+	const deniedMsg = document.getElementById('admin-denied-msg');
 	const adminContent = document.getElementById('admin-content');
 	const emailEl = document.getElementById('admin-email');
 	const logoutBtn = document.getElementById('logout-btn');
+	const loginForm = document.getElementById('admin-login-form') as HTMLFormElement;
+	const loginError = document.getElementById('admin-login-error');
+
+	function showLoginForm() {
+		loginWrap?.removeAttribute('hidden');
+		deniedMsg?.setAttribute('hidden', '');
+		adminContent?.setAttribute('hidden', '');
+	}
+
+	function showDenied() {
+		loginWrap?.setAttribute('hidden', '');
+		deniedMsg?.removeAttribute('hidden');
+		adminContent?.setAttribute('hidden', '');
+	}
 
 	async function checkAdmin() {
 		const { data: { session } } = await supabase.auth.getSession();
 		if (!session) {
-			authMsg?.removeAttribute('hidden');
+			showLoginForm();
 			return;
 		}
 		const { data: profile } = await supabase
@@ -111,9 +142,11 @@ import Layout from '../layouts/Layout.astro';
 			.single();
 
 		if (!profile || profile.role !== 'admin') {
-			authMsg?.removeAttribute('hidden');
+			showDenied();
 			return;
 		}
+		loginWrap?.setAttribute('hidden', '');
+		deniedMsg?.setAttribute('hidden', '');
 		if (emailEl) emailEl.textContent = session.user.email ?? '';
 		adminContent?.removeAttribute('hidden');
 		loadWorks();
@@ -123,9 +156,27 @@ import Layout from '../layouts/Layout.astro';
 
 	checkAdmin();
 
+	loginForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		loginError?.setAttribute('hidden', '');
+		const fd = new FormData(loginForm);
+		const { error } = await supabase.auth.signInWithPassword({
+			email: fd.get('email') as string,
+			password: fd.get('password') as string,
+		});
+		if (error) {
+			if (loginError) {
+				loginError.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.';
+				loginError.removeAttribute('hidden');
+			}
+			return;
+		}
+		checkAdmin();
+	});
+
 	logoutBtn?.addEventListener('click', async () => {
 		await supabase.auth.signOut();
-		window.location.href = '/';
+		checkAdmin();
 	});
 
 	async function loadWorks() {
@@ -360,6 +411,60 @@ import Layout from '../layouts/Layout.astro';
 		color: var(--heading);
 		font-weight: 700;
 		text-decoration: underline;
+	}
+
+	.admin-login-wrap {
+		max-width: 360px;
+		margin: 3rem auto;
+		padding: 2rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+	}
+	.admin-login-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.admin-login-form .field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.admin-login-form label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--heading);
+	}
+	.admin-login-form input {
+		font: inherit;
+		padding: 0.6rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--fg);
+	}
+	.admin-login-form input:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+	.auth-btn {
+		font: inherit;
+		padding: 0.7rem 1.2rem;
+		border: none;
+		border-radius: 4px;
+		background: var(--heading);
+		color: #fff;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.auth-btn:hover {
+		background: var(--accent);
+	}
+	.error {
+		color: #d32f2f;
+		font-size: 0.85rem;
+		margin: 0;
 	}
 	.admin-header {
 		display: flex;
