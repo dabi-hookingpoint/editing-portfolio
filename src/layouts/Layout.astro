@@ -146,25 +146,14 @@ const currentPath = Astro.url.pathname;
 			const logoutLink = document.getElementById('nav-logout');
 
 			async function updateNav() {
+				adminLink?.style.removeProperty('display');
+
 				const { data: { session } } = await supabase.auth.getSession();
 				if (session) {
 					loginLink?.style.setProperty('display', 'none');
 					logoutLink?.style.removeProperty('display');
-
-					const { data: profile } = await supabase
-						.from('profiles')
-						.select('role')
-						.eq('id', session.user.id)
-						.single();
-
-					if (profile?.role === 'admin') {
-						adminLink?.style.removeProperty('display');
-					} else {
-						adminLink?.style.setProperty('display', 'none');
-					}
 				} else {
 					loginLink?.style.removeProperty('display');
-					adminLink?.style.setProperty('display', 'none');
 					logoutLink?.style.setProperty('display', 'none');
 				}
 			}
