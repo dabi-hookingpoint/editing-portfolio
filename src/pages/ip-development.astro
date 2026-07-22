@@ -94,7 +94,7 @@ const projects = (await getCollection('ipProjects')).sort(
 			if (stageEl) stageEl.textContent = stage ?? '';
 			if (loglineEl) loglineEl.textContent = logline ?? '';
 			if (requestEl) {
-				requestEl.href = `mailto:contact@hookingpoint.kr?subject=${encodeURIComponent(`[${title}] 자료 요청`)}`;
+				requestEl.href = `mailto:hooking.point@gmail.com?subject=${encodeURIComponent(`[${title}] 자료 요청`)}`;
 			}
 			if (synopsisEl) synopsisEl.textContent = '불러오는 중…';
 			dialog.showModal();
