@@ -15,21 +15,6 @@
     "watchLink": { "label": "디즈니+ (공개 예정)", "url": "#" }
   },
   {
-    "id": "joseon-attorney",
-    "image": "/images/works/joseon-attorney.png",
-    "title": "조선변호사",
-    "releaseYear": 2023,
-    "genre": "사극 법정극",
-    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
-    "type": "드라마",
-    "synopsis": "부모를 죽음으로 몰아넣은 원수에게 법으로 되갚아주는 조선시대 변호사 '강한수'가, 백성을 위한 진짜 변호사로 성장해가는 이야기를 그린 유쾌·통쾌한 법정 리벤지 활극.",
-    "airPeriod": { "start": "2023.03.31", "end": "2023.05.20" },
-    "director": "김승호, 이한준",
-    "writer": "최진영",
-    "cast": ["우도환", "김지연", "차학연"],
-    "watchLink": { "label": "웨이브에서 보기", "url": "https://www.wavve.com" }
-  },
-  {
     "id": "last-woman-on-earth",
     "image": "/images/works/last-woman-on-earth.png",
     "title": "지구 최후의 여자",
@@ -43,5 +28,20 @@
     "writer": "염문경, 이종민",
     "cast": ["염문경", "이종민", "윤상화"],
     "watchLink": { "label": "씨네21에서 보기", "url": "https://cine21.com/movie/info/?movie_id=63238" }
+  },
+  {
+    "id": "joseon-attorney",
+    "image": "/images/works/joseon-attorney.png",
+    "title": "조선변호사",
+    "releaseYear": 2023,
+    "genre": "사극 법정극",
+    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
+    "type": "드라마",
+    "synopsis": "부모를 죽음으로 몰아넣은 원수에게 법으로 되갚아주는 조선시대 변호사 '강한수'가, 백성을 위한 진짜 변호사로 성장해가는 이야기를 그린 유쾌·통쾌한 법정 리벤지 활극.",
+    "airPeriod": { "start": "2023.03.31", "end": "2023.05.20" },
+    "director": "김승호, 이한준",
+    "writer": "최진영",
+    "cast": ["우도환", "김지연", "차학연"],
+    "watchLink": { "label": "웨이브에서 보기", "url": "https://www.wavve.com" }
   }
 ]

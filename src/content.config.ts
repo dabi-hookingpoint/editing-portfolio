@@ -28,7 +28,7 @@ const works = defineCollection({
 
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    const { data, error } = await supabase.from('works').select('*');
+    const { data, error } = await supabase.from('works').select('*').order('sort_order', { ascending: true });
     if (error) throw new Error(`Supabase works fetch failed: ${error.message}`);
 
     return data.map((row) => ({
