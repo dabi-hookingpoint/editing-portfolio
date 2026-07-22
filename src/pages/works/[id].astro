@@ -25,6 +25,7 @@ const {
 	writer,
 	cast,
 	watchLink,
+	festivals,
 } = work.data;
 ---
 
@@ -60,6 +61,15 @@ const {
 				<h2>{type === '드라마' ? '방영기간' : '개봉일'}</h2>
 				<p>{type === '드라마' ? `${airPeriod.start} ~ ${airPeriod.end}` : releaseDate}</p>
 			</section>
+
+			{festivals && festivals.length > 0 && (
+				<section>
+					<h2>영화제 초청 · 상영</h2>
+					<ul class="festival-list">
+						{festivals.map((f) => <li>{f}</li>)}
+					</ul>
+				</section>
+			)}
 
 			<hr />
 
@@ -158,6 +168,13 @@ const {
 		margin: 0;
 		color: var(--fg);
 		font-size: 0.95rem;
+	}
+	.festival-list {
+		margin: 0;
+		padding-left: 1.2rem;
+		color: var(--fg);
+		font-size: 0.9rem;
+		line-height: 1.7;
 	}
 
 	.info hr {

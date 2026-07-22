@@ -6,7 +6,7 @@ const workSchema = z.object({
   releaseYear: z.number(),
   genre: z.string(),
   editingApproach: z.string(),
-  type: z.enum(['영화', '드라마']),
+  type: z.enum(['영화', '드라마', '다큐멘터리']),
   synopsis: z.string(),
   releaseDate: z.string().optional(),
   airPeriod: z.object({ start: z.string(), end: z.string() }).optional(),
@@ -15,6 +15,7 @@ const workSchema = z.object({
   writer: z.string(),
   cast: z.array(z.string()),
   watchLink: z.object({ label: z.string(), url: z.string() }),
+  festivals: z.array(z.string()).optional(),
   sortOrder: z.number(),
 });
 
@@ -57,6 +58,7 @@ const works = defineCollection({
       writer: row.writer,
       cast: row.cast_members,
       watchLink: { label: row.watch_label, url: row.watch_url },
+      festivals: row.festivals ?? undefined,
       sortOrder: row.sort_order,
     }));
   },
