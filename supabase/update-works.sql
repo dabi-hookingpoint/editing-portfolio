@@ -1,26 +1,4 @@
-create table if not exists works (
-  id text primary key,
-  image text not null,
-  title text not null,
-  release_year integer not null,
-  genre text not null,
-  editing_approach text not null,
-  type text not null check (type in ('영화', '드라마')),
-  synopsis text not null,
-  release_date text,
-  air_start text,
-  air_end text,
-  director text not null,
-  writer text not null,
-  cast_members text[] not null,
-  watch_label text not null,
-  watch_url text not null
-);
-
-alter table works enable row level security;
-
-create policy "Public read access" on works
-  for select using (true);
+delete from works;
 
 insert into works (
   id, image, title, release_year, genre, editing_approach, type, synopsis,
@@ -49,5 +27,4 @@ insert into works (
   '할리우드식 장르 영화로 지원사업에 떨어진 마초남 ''송철''은 영화 교양 시나리오 수업에서 ''여성 서사 가산점''을 노리다 남자를 혐오하는 ''구한아''와 얼떨결에 팀이 된다. 산으로 가는 이야기를 만들어가며 점점 가까워지는 두 사람을 그린, SF와 메타영화, 블랙코미디, 로맨스가 뒤섞인 독립영화.',
   '2026.07.15', null, null, '염문경, 이종민', '염문경, 이종민', array['염문경','이종민','윤상화'],
   '씨네21에서 보기', 'https://cine21.com/movie/info/?movie_id=63238'
-)
-on conflict (id) do nothing;
+);
