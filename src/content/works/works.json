@@ -12,7 +12,8 @@
     "director": "김수정, 노영섭",
     "writer": "이재윤",
     "cast": ["지창욱", "이마다 미오", "남윤수"],
-    "watchLink": { "label": "디즈니+ · 닛폰 테레비 (공개 예정)", "url": "#" }
+    "watchLink": { "label": "디즈니+ · 닛폰 테레비 (공개 예정)", "url": "#" },
+    "sortOrder": 1
   },
   {
     "id": "last-woman-on-earth",
@@ -27,7 +28,8 @@
     "director": "염문경, 이종민",
     "writer": "염문경, 이종민",
     "cast": ["염문경", "이종민", "윤상화"],
-    "watchLink": { "label": "씨네21에서 보기", "url": "https://cine21.com/movie/info/?movie_id=63238" }
+    "watchLink": { "label": "씨네21에서 보기", "url": "https://cine21.com/movie/info/?movie_id=63238" },
+    "sortOrder": 2
   },
   {
     "id": "joseon-attorney",
@@ -42,6 +44,7 @@
     "director": "김승호, 이한준",
     "writer": "최진영",
     "cast": ["우도환", "김지연", "차학연"],
-    "watchLink": { "label": "웨이브에서 보기", "url": "https://www.wavve.com" }
+    "watchLink": { "label": "웨이브에서 보기", "url": "https://www.wavve.com" },
+    "sortOrder": 3
   }
 ]

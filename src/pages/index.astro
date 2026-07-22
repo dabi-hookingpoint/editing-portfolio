@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
-const works = await getCollection('works');
+const works = (await getCollection('works')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
 ---
 
 <Layout title="편집실 포트폴리오">

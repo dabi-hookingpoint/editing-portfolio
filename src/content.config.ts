@@ -14,6 +14,7 @@ const workSchema = z.object({
   writer: z.string(),
   cast: z.array(z.string()),
   watchLink: z.object({ label: z.string(), url: z.string() }),
+  sortOrder: z.number(),
 });
 
 const works = defineCollection({
@@ -46,6 +47,7 @@ const works = defineCollection({
       writer: row.writer,
       cast: row.cast_members,
       watchLink: { label: row.watch_label, url: row.watch_url },
+      sortOrder: row.sort_order,
     }));
   },
   schema: workSchema,
