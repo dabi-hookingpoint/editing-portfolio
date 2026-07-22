@@ -28,9 +28,13 @@ const {
 ---
 
 <Layout title={`${title} - 편집실 포트폴리오`}>
-	<a class="watch-link" href={watchLink.url} target="_blank" rel="noopener noreferrer">
-		{watchLink.label} ↗
-	</a>
+	{watchLink.url === '#' ? (
+		<span class="watch-link watch-link-static">{watchLink.label}</span>
+	) : (
+		<a class="watch-link" href={watchLink.url} target="_blank" rel="noopener noreferrer">
+			{watchLink.label} ↗
+		</a>
+	)}
 
 	<div class="detail-grid">
 		<img class="poster" src={image} alt={title} />
@@ -98,6 +102,13 @@ const {
 	.watch-link:hover {
 		background: #fff;
 		color: #000;
+	}
+	.watch-link-static {
+		cursor: default;
+	}
+	.watch-link-static:hover {
+		background: none;
+		color: #fff;
 	}
 
 	.detail-grid {
