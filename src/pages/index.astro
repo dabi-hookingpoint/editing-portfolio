@@ -1,63 +1,50 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
-
-const works = (await getCollection('works')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
 ---
 
-<Layout title="편집실 포트폴리오">
-	<h1>Hooking point EDIT filmography</h1>
-	<ul class="work-list">
-		{works.map((work) => (
-			<li class="work-card">
-				<a href={`/works/${work.id}`}>
-					<img src={work.data.image} alt={work.data.title} width="120" height="160" />
-					<div>
-						<h2>{work.data.title} <span class="year">({work.data.releaseYear})</span></h2>
-						<p>{work.data.genre}</p>
-					</div>
-				</a>
-			</li>
-		))}
-	</ul>
+<Layout title="Hooking Point">
+	<div class="hero">
+		<p class="logo">HOOKING POINT</p>
+		<p class="vision">
+			(우리의 비전 문구 작성 예정 — 알려주시면 반영할게요)
+		</p>
+		<a class="cta" href="/filmography">EDIT Filmography 보기 →</a>
+	</div>
 </Layout>
 
 <style>
-	.work-list {
-		list-style: none;
-		padding: 0;
-		display: grid;
-		gap: 1.2rem;
-	}
-	.work-card {
-		border: 1px solid #333;
-		border-radius: 8px;
-		transition: border-color 0.15s ease;
-	}
-	.work-card:hover {
-		border-color: #777;
-	}
-	.work-card a {
+	.hero {
+		min-height: calc(100vh - 4rem);
 		display: flex;
-		gap: 1rem;
+		flex-direction: column;
 		align-items: center;
-		padding: 1rem;
-		text-decoration: none;
+		justify-content: center;
+		text-align: center;
+		gap: 2rem;
 	}
-	.work-card img {
-		object-fit: cover;
-		border-radius: 4px;
-		background: #111;
-	}
-	.work-card h2 {
-		margin: 0 0 0.3rem;
-		font-size: 1.1rem;
-	}
-	.work-card .year {
-		font-weight: 400;
-	}
-	.work-card p {
+	.logo {
 		margin: 0;
+		font-size: 1.1rem;
+		font-weight: 700;
+		letter-spacing: 0.2em;
+	}
+	.vision {
+		margin: 0;
+		max-width: 32rem;
+		font-size: 1.3rem;
+		line-height: 1.7;
 		color: #fff;
+	}
+	.cta {
+		display: inline-block;
+		border: 1px solid #fff;
+		border-radius: 4px;
+		padding: 0.8rem 1.5rem;
+		text-decoration: none;
+		font-weight: 600;
+	}
+	.cta:hover {
+		background: #fff;
+		color: #000;
 	}
 </style>

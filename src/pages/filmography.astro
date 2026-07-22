@@ -1,0 +1,64 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const works = (await getCollection('works')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+---
+
+<Layout title="Hooking point EDIT filmography">
+	<a class="back-link" href="/">← 홈으로</a>
+	<h1>Hooking point EDIT filmography</h1>
+	<ul class="work-list">
+		{works.map((work) => (
+			<li class="work-card">
+				<a href={`/works/${work.id}`}>
+					<img src={work.data.image} alt={work.data.title} width="120" height="160" />
+					<div>
+						<h2>{work.data.title} <span class="year">({work.data.releaseYear})</span></h2>
+						<p>{work.data.genre}</p>
+					</div>
+				</a>
+			</li>
+		))}
+	</ul>
+</Layout>
+
+<style>
+	.work-list {
+		list-style: none;
+		padding: 0;
+		display: grid;
+		gap: 1.2rem;
+	}
+	.work-card {
+		border: 1px solid #333;
+		border-radius: 8px;
+		transition: border-color 0.15s ease;
+	}
+	.work-card:hover {
+		border-color: #777;
+	}
+	.work-card a {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		padding: 1rem;
+		text-decoration: none;
+	}
+	.work-card img {
+		object-fit: cover;
+		border-radius: 4px;
+		background: #111;
+	}
+	.work-card h2 {
+		margin: 0 0 0.3rem;
+		font-size: 1.1rem;
+	}
+	.work-card .year {
+		font-weight: 400;
+	}
+	.work-card p {
+		margin: 0;
+		color: #fff;
+	}
+</style>
