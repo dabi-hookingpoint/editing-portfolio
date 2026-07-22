@@ -1,0 +1,571 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="관리자 — Hooking Point">
+	<div class="page admin-page">
+		<h1>ADMIN</h1>
+		<p id="admin-auth-msg" class="auth-msg" hidden>관리자 권한이 필요합니다. <a href="/login">로그인</a></p>
+
+		<div id="admin-content" hidden>
+			<div class="admin-header">
+				<span id="admin-email" class="admin-email"></span>
+				<button id="logout-btn" class="logout-btn">로그아웃</button>
+			</div>
+
+			<section class="admin-section">
+				<h2>Works (편집 작품)</h2>
+				<button id="works-add-btn" class="add-btn">+ 작품 추가</button>
+				<div id="works-form-wrap" class="form-wrap" hidden>
+					<form id="works-form" class="admin-form">
+						<input type="hidden" name="id" />
+						<div class="form-row">
+							<div class="field"><label>제목</label><input name="title" required /></div>
+							<div class="field"><label>장르</label><input name="genre" required /></div>
+						</div>
+						<div class="form-row">
+							<div class="field"><label>유형</label><select name="type"><option>드라마</option><option>영화</option></select></div>
+							<div class="field"><label>출시년도</label><input name="releaseYear" type="number" required /></div>
+						</div>
+						<div class="field"><label>편집 접근법</label><textarea name="editingApproach" rows="2"></textarea></div>
+						<div class="field"><label>시놉시스</label><textarea name="synopsis" rows="3"></textarea></div>
+						<div class="form-row">
+							<div class="field"><label>개봉일</label><input name="releaseDate" placeholder="2025.07.30" /></div>
+							<div class="field"><label>방영 시작</label><input name="airStart" placeholder="2025.03.31" /></div>
+							<div class="field"><label>방영 종료</label><input name="airEnd" placeholder="2025.05.20" /></div>
+						</div>
+						<div class="form-row">
+							<div class="field"><label>감독</label><input name="director" required /></div>
+							<div class="field"><label>제작사</label><input name="productionCompany" required /></div>
+							<div class="field"><label>극본</label><input name="writer" required /></div>
+						</div>
+						<div class="field"><label>출연진 (쉼표 구분)</label><input name="cast" required placeholder="김시은, 설정환, 오지후" /></div>
+						<div class="form-row">
+							<div class="field"><label>시청 링크 라벨</label><input name="watchLabel" required /></div>
+							<div class="field"><label>시청 링크 URL</label><input name="watchUrl" required /></div>
+						</div>
+						<div class="form-row">
+							<div class="field"><label>이미지 경로</label><input name="image" required placeholder="/images/works/xxx.png" /></div>
+							<div class="field"><label>정렬 순서</label><input name="sortOrder" type="number" required /></div>
+						</div>
+						<div class="form-actions">
+							<button type="submit" class="save-btn">저장</button>
+							<button type="button" class="cancel-btn" onclick="document.getElementById('works-form-wrap')?.setAttribute('hidden','')">취소</button>
+						</div>
+					</form>
+				</div>
+				<div id="works-list" class="admin-list"></div>
+			</section>
+
+			<section class="admin-section">
+				<h2>IP Projects (IP 기획)</h2>
+				<button id="ip-add-btn" class="add-btn">+ 프로젝트 추가</button>
+				<div id="ip-form-wrap" class="form-wrap" hidden>
+					<form id="ip-form" class="admin-form">
+						<input type="hidden" name="id" />
+						<div class="form-row">
+							<div class="field"><label>제목</label><input name="title" required /></div>
+							<div class="field"><label>장르</label><input name="genre" required /></div>
+						</div>
+						<div class="form-row">
+							<div class="field"><label>단계</label><select name="stage"><option>기획</option><option>트리트먼트</option><option>대본</option><option>개발</option><option>피칭</option></select></div>
+							<div class="field"><label>정렬 순서</label><input name="sortOrder" type="number" required /></div>
+						</div>
+						<div class="field"><label>로그라인 (공개)</label><textarea name="logline" rows="3" required></textarea></div>
+						<div class="field"><label>상세 시놉시스 (로그인 사용자만 열람)</label><textarea name="synopsis" rows="4"></textarea></div>
+						<div class="form-actions">
+							<button type="submit" class="save-btn">저장</button>
+							<button type="button" class="cancel-btn" onclick="document.getElementById('ip-form-wrap')?.setAttribute('hidden','')">취소</button>
+						</div>
+					</form>
+				</div>
+				<div id="ip-list" class="admin-list"></div>
+			</section>
+
+			<section class="admin-section">
+				<h2>회원 관리</h2>
+				<div id="users-list" class="admin-list"></div>
+			</section>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { supabase } from '../lib/supabase';
+
+	const authMsg = document.getElementById('admin-auth-msg');
+	const adminContent = document.getElementById('admin-content');
+	const emailEl = document.getElementById('admin-email');
+	const logoutBtn = document.getElementById('logout-btn');
+
+	async function checkAdmin() {
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session) {
+			authMsg?.removeAttribute('hidden');
+			return;
+		}
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role')
+			.eq('id', session.user.id)
+			.single();
+
+		if (!profile || profile.role !== 'admin') {
+			authMsg?.removeAttribute('hidden');
+			return;
+		}
+		if (emailEl) emailEl.textContent = session.user.email ?? '';
+		adminContent?.removeAttribute('hidden');
+		loadWorks();
+		loadIpProjects();
+		loadUsers();
+	}
+
+	checkAdmin();
+
+	logoutBtn?.addEventListener('click', async () => {
+		await supabase.auth.signOut();
+		window.location.href = '/';
+	});
+
+	async function loadWorks() {
+		const { data } = await supabase.from('works').select('*').order('sort_order', { ascending: true });
+		const list = document.getElementById('works-list');
+		if (!list || !data) return;
+		list.innerHTML = data.map((w) => `
+			<div class="list-item">
+				<span class="item-title">${w.title} <small class="item-meta">${w.type} · ${w.release_year}</small></span>
+				<span class="item-actions">
+					<button class="edit-btn" data-table="works" data-id="${w.id}">수정</button>
+					<button class="delete-btn" data-table="works" data-id="${w.id}">삭제</button>
+				</span>
+			</div>
+		`).join('');
+		attachListActions();
+	}
+
+	async function loadIpProjects() {
+		const { data } = await supabase.from('ip_projects').select('*').order('sort_order', { ascending: true });
+		const list = document.getElementById('ip-list');
+		if (!list || !data) return;
+		list.innerHTML = data.map((p) => `
+			<div class="list-item">
+				<span class="item-title">${p.title} <small class="item-meta">${p.stage} · ${p.genre}</small></span>
+				<span class="item-actions">
+					<button class="edit-btn" data-table="ip_projects" data-id="${p.id}">수정</button>
+					<button class="delete-btn" data-table="ip_projects" data-id="${p.id}">삭제</button>
+				</span>
+			</div>
+		`).join('');
+		attachListActions();
+	}
+
+	async function loadUsers() {
+		const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: true });
+		const list = document.getElementById('users-list');
+		if (!list || !data) return;
+		const { data: { session } } = await supabase.auth.getSession();
+		const currentUserId = session?.user.id;
+		list.innerHTML = data.map((u) => `
+			<div class="list-item">
+				<span class="item-title">
+					${u.email || '(이메일 없음)'}
+					<small class="item-meta">${u.role === 'admin' ? '관리자' : '일반 사용자'}</small>
+				</span>
+				<span class="item-actions">
+					${u.id !== currentUserId ? `
+						<button class="role-btn" data-user-id="${u.id}" data-current-role="${u.role}">
+							${u.role === 'admin' ? '관리자 해제' : '관리자 지정'}
+						</button>
+						<button class="delete-btn" data-user-id="${u.id}">삭제</button>
+					` : '<span class="self-badge">본인</span>'}
+				</span>
+			</div>
+		`).join('');
+
+		list.querySelectorAll<HTMLButtonElement>('.role-btn').forEach((btn) => {
+			btn.onclick = async () => {
+				const userId = btn.dataset.userId!;
+				const newRole = btn.dataset.currentRole === 'admin' ? 'user' : 'admin';
+				if (!confirm(`역할을 ${newRole === 'admin' ? '관리자' : '일반 사용자'}로 변경하시겠습니까?`)) return;
+				await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+				loadUsers();
+			};
+		});
+
+		list.querySelectorAll<HTMLButtonElement>('.delete-btn').forEach((btn) => {
+			btn.onclick = async () => {
+				const userId = btn.dataset.userId!;
+				if (!confirm('정말 이 회원을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+				await supabase.from('profiles').delete().eq('id', userId);
+				loadUsers();
+			};
+		});
+	}
+
+	function attachListActions() {
+		document.querySelectorAll<HTMLButtonElement>('.edit-btn').forEach((btn) => {
+			btn.onclick = async () => {
+				const table = btn.dataset.table!;
+				const id = btn.dataset.id!;
+				if (table === 'works') {
+					const { data } = await supabase.from('works').select('*').eq('id', id).single();
+					if (!data) return;
+					const form = document.getElementById('works-form') as HTMLFormElement;
+					const wrap = document.getElementById('works-form-wrap');
+					wrap?.removeAttribute('hidden');
+					form.querySelector<HTMLInputElement>('[name="id"]')!.value = data.id;
+					form.querySelector<HTMLInputElement>('[name="title"]')!.value = data.title;
+					form.querySelector<HTMLInputElement>('[name="genre"]')!.value = data.genre;
+					form.querySelector<HTMLSelectElement>('[name="type"]')!.value = data.type;
+					form.querySelector<HTMLInputElement>('[name="releaseYear"]')!.value = data.release_year;
+					form.querySelector<HTMLTextAreaElement>('[name="editingApproach"]')!.value = data.editing_approach;
+					form.querySelector<HTMLTextAreaElement>('[name="synopsis"]')!.value = data.synopsis;
+					form.querySelector<HTMLInputElement>('[name="releaseDate"]')!.value = data.release_date ?? '';
+					form.querySelector<HTMLInputElement>('[name="airStart"]')!.value = data.air_start ?? '';
+					form.querySelector<HTMLInputElement>('[name="airEnd"]')!.value = data.air_end ?? '';
+					form.querySelector<HTMLInputElement>('[name="director"]')!.value = data.director;
+					form.querySelector<HTMLInputElement>('[name="productionCompany"]')!.value = data.production_company;
+					form.querySelector<HTMLInputElement>('[name="writer"]')!.value = data.writer;
+					form.querySelector<HTMLInputElement>('[name="cast"]')!.value = data.cast_members?.join(', ') ?? '';
+					form.querySelector<HTMLInputElement>('[name="watchLabel"]')!.value = data.watch_label;
+					form.querySelector<HTMLInputElement>('[name="watchUrl"]')!.value = data.watch_url;
+					form.querySelector<HTMLInputElement>('[name="image"]')!.value = data.image;
+					form.querySelector<HTMLInputElement>('[name="sortOrder"]')!.value = data.sort_order;
+				} else {
+					const { data } = await supabase.from('ip_projects').select('*').eq('id', id).single();
+					if (!data) return;
+					const { data: synopsisRow } = await supabase
+						.from('ip_project_synopses')
+						.select('synopsis')
+						.eq('project_id', id)
+						.maybeSingle();
+					const form = document.getElementById('ip-form') as HTMLFormElement;
+					const wrap = document.getElementById('ip-form-wrap');
+					wrap?.removeAttribute('hidden');
+					form.querySelector<HTMLInputElement>('[name="id"]')!.value = data.id;
+					form.querySelector<HTMLInputElement>('[name="title"]')!.value = data.title;
+					form.querySelector<HTMLInputElement>('[name="genre"]')!.value = data.genre;
+					form.querySelector<HTMLSelectElement>('[name="stage"]')!.value = data.stage;
+					form.querySelector<HTMLTextAreaElement>('[name="logline"]')!.value = data.logline;
+					form.querySelector<HTMLTextAreaElement>('[name="synopsis"]')!.value = synopsisRow?.synopsis ?? '';
+					form.querySelector<HTMLInputElement>('[name="sortOrder"]')!.value = data.sort_order;
+				}
+			};
+		});
+
+		document.querySelectorAll<HTMLButtonElement>('.delete-btn').forEach((btn) => {
+			btn.onclick = async () => {
+				const table = btn.dataset.table!;
+				const id = btn.dataset.id!;
+				if (!confirm('정말 삭제하시겠습니까?')) return;
+				await supabase.from(table).delete().eq('id', id);
+				if (table === 'works') loadWorks();
+				else loadIpProjects();
+			};
+		});
+	}
+
+	document.getElementById('works-add-btn')?.addEventListener('click', () => {
+		const form = document.getElementById('works-form') as HTMLFormElement;
+		form?.reset();
+		form.querySelector<HTMLInputElement>('[name="id"]')!.value = '';
+		document.getElementById('works-form-wrap')?.removeAttribute('hidden');
+	});
+
+	document.getElementById('ip-add-btn')?.addEventListener('click', () => {
+		const form = document.getElementById('ip-form') as HTMLFormElement;
+		form?.reset();
+		form.querySelector<HTMLInputElement>('[name="id"]')!.value = '';
+		document.getElementById('ip-form-wrap')?.removeAttribute('hidden');
+	});
+
+	document.getElementById('works-form')?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const form = e.target as HTMLFormElement;
+		const fd = new FormData(form);
+		const id = fd.get('id') as string;
+		const row = {
+			id: id || `${Date.now()}`,
+			title: fd.get('title') as string,
+			genre: fd.get('genre') as string,
+			type: fd.get('type') as string,
+			release_year: Number(fd.get('releaseYear')),
+			editing_approach: fd.get('editingApproach') as string || '',
+			synopsis: fd.get('synopsis') as string || '',
+			release_date: fd.get('releaseDate') as string || null,
+			air_start: fd.get('airStart') as string || null,
+			air_end: fd.get('airEnd') as string || null,
+			director: fd.get('director') as string,
+			production_company: fd.get('productionCompany') as string,
+			writer: fd.get('writer') as string,
+			cast_members: (fd.get('cast') as string).split(',').map((s) => s.trim()),
+			watch_label: fd.get('watchLabel') as string,
+			watch_url: fd.get('watchUrl') as string,
+			image: fd.get('image') as string,
+			sort_order: Number(fd.get('sortOrder')),
+		};
+		if (id) {
+			await supabase.from('works').update(row).eq('id', id);
+		} else {
+			await supabase.from('works').insert(row);
+		}
+		document.getElementById('works-form-wrap')?.setAttribute('hidden', '');
+		loadWorks();
+	});
+
+	document.getElementById('ip-form')?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const form = e.target as HTMLFormElement;
+		const fd = new FormData(form);
+		const id = fd.get('id') as string;
+		const projectId = id || `${Date.now()}`;
+		const row = {
+			id: projectId,
+			title: fd.get('title') as string,
+			genre: fd.get('genre') as string,
+			stage: fd.get('stage') as string,
+			logline: fd.get('logline') as string,
+			sort_order: Number(fd.get('sortOrder')),
+		};
+		if (id) {
+			await supabase.from('ip_projects').update(row).eq('id', id);
+		} else {
+			await supabase.from('ip_projects').insert(row);
+		}
+
+		const synopsis = (fd.get('synopsis') as string || '').trim();
+		if (synopsis) {
+			await supabase
+				.from('ip_project_synopses')
+				.upsert({ project_id: projectId, synopsis, updated_at: new Date().toISOString() });
+		}
+
+		document.getElementById('ip-form-wrap')?.setAttribute('hidden', '');
+		loadIpProjects();
+	});
+</script>
+
+<style>
+	.admin-page {
+		padding-top: 2rem;
+	}
+	.auth-msg {
+		color: var(--muted);
+		padding: 3rem 0;
+		text-align: center;
+		font-size: 1.1rem;
+	}
+	.auth-msg a {
+		color: var(--heading);
+		font-weight: 700;
+		text-decoration: underline;
+	}
+	.admin-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1rem 1.2rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		margin-bottom: 2rem;
+	}
+	.admin-email {
+		font-size: 0.9rem;
+		color: var(--muted);
+	}
+	.logout-btn {
+		font: inherit;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: none;
+		color: var(--muted);
+		cursor: pointer;
+		font-size: 0.85rem;
+		transition: border-color 0.15s ease, color 0.15s ease;
+	}
+	.logout-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.admin-section {
+		margin-bottom: 3rem;
+	}
+	.admin-section h2 {
+		font-size: 1.2rem;
+		margin-bottom: 1rem;
+	}
+	.add-btn {
+		font: inherit;
+		padding: 0.6rem 1.2rem;
+		border: 1px solid var(--heading);
+		border-radius: 4px;
+		background: none;
+		color: var(--heading);
+		font-weight: 600;
+		cursor: pointer;
+		margin-bottom: 1rem;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+	.add-btn:hover {
+		background: var(--heading);
+		color: #fff;
+	}
+
+	.form-wrap {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+	.admin-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.form-row {
+		display: flex;
+		gap: 1rem;
+	}
+	.form-row .field {
+		flex: 1;
+	}
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+	.field label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--heading);
+	}
+	.field input,
+	.field select,
+	.field textarea {
+		font: inherit;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--fg);
+		font-size: 0.9rem;
+	}
+	.field input:focus,
+	.field select:focus,
+	.field textarea:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+	.form-actions {
+		display: flex;
+		gap: 0.8rem;
+		margin-top: 0.5rem;
+	}
+	.save-btn {
+		font: inherit;
+		padding: 0.6rem 1.5rem;
+		border: none;
+		border-radius: 4px;
+		background: var(--heading);
+		color: #fff;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.save-btn:hover {
+		background: var(--accent);
+	}
+	.cancel-btn {
+		font: inherit;
+		padding: 0.6rem 1.2rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: none;
+		color: var(--muted);
+		cursor: pointer;
+	}
+
+	.admin-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.list-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.8rem 1rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+	}
+	.item-title {
+		font-weight: 600;
+		color: var(--fg);
+	}
+	.item-meta {
+		font-weight: 400;
+		color: var(--muted);
+		margin-left: 0.5rem;
+	}
+	.item-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.edit-btn,
+	.delete-btn {
+		font: inherit;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: none;
+		cursor: pointer;
+		font-size: 0.8rem;
+		transition: border-color 0.15s ease, color 0.15s ease;
+	}
+	.edit-btn {
+		color: var(--heading);
+	}
+	.edit-btn:hover {
+		border-color: var(--heading);
+	}
+	.delete-btn {
+		color: #d32f2f;
+	}
+	.delete-btn:hover {
+		border-color: #d32f2f;
+	}
+	.role-btn {
+		font: inherit;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--heading);
+		border-radius: 4px;
+		background: none;
+		color: var(--heading);
+		cursor: pointer;
+		font-size: 0.8rem;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+	.role-btn:hover {
+		background: var(--heading);
+		color: #fff;
+	}
+	.self-badge {
+		font-size: 0.75rem;
+		color: var(--muted);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 0.2rem 0.5rem;
+	}
+
+	@media (max-width: 700px) {
+		.form-row {
+			flex-direction: column;
+			gap: 1rem;
+		}
+	}
+</style>

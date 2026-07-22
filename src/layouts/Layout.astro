@@ -10,6 +10,9 @@ const navItems = [
 	{ href: '/ip-development', label: 'IP DEVELOPMENT' },
 	{ href: '/about', label: 'ABOUT' },
 	{ href: '/contact', label: 'CONTACT' },
+	{ href: '/login', label: 'LOGIN', id: 'nav-login' },
+	{ href: '/admin', label: 'ADMIN', id: 'nav-admin' },
+	{ href: '#', label: 'LOGOUT', id: 'nav-logout' },
 ];
 const currentPath = Astro.url.pathname;
 ---
@@ -122,7 +125,12 @@ const currentPath = Astro.url.pathname;
 			<a class="logo" href="/">HOOKING POINT</a>
 			<nav class="site-nav">
 				{navItems.map((item) => (
-					<a href={item.href} aria-current={currentPath === item.href ? 'page' : undefined}>
+					<a
+						href={item.href}
+						id={item.id}
+						aria-current={currentPath === item.href ? 'page' : undefined}
+						style={item.id ? 'display:none' : undefined}
+					>
 						{item.label}
 					</a>
 				))}
@@ -130,5 +138,44 @@ const currentPath = Astro.url.pathname;
 		</header>
 		<slot />
 		<footer class="site-footer">© Hooking Point. All rights reserved.</footer>
+		<script>
+			import { supabase } from '../lib/supabase';
+
+			const loginLink = document.getElementById('nav-login');
+			const adminLink = document.getElementById('nav-admin');
+			const logoutLink = document.getElementById('nav-logout');
+
+			async function updateNav() {
+				const { data: { session } } = await supabase.auth.getSession();
+				if (session) {
+					loginLink?.style.setProperty('display', 'none');
+					logoutLink?.style.removeProperty('display');
+
+					const { data: profile } = await supabase
+						.from('profiles')
+						.select('role')
+						.eq('id', session.user.id)
+						.single();
+
+					if (profile?.role === 'admin') {
+						adminLink?.style.removeProperty('display');
+					} else {
+						adminLink?.style.setProperty('display', 'none');
+					}
+				} else {
+					loginLink?.style.removeProperty('display');
+					adminLink?.style.setProperty('display', 'none');
+					logoutLink?.style.setProperty('display', 'none');
+				}
+			}
+
+			updateNav();
+
+			logoutLink?.addEventListener('click', async (e) => {
+				e.preventDefault();
+				await supabase.auth.signOut();
+				window.location.href = '/';
+			});
+		</script>
 	</body>
 </html>

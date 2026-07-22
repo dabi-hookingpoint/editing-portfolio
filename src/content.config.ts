@@ -18,6 +18,14 @@ const workSchema = z.object({
   sortOrder: z.number(),
 });
 
+const ipProjectSchema = z.object({
+  title: z.string(),
+  genre: z.string(),
+  stage: z.string(),
+  logline: z.string(),
+  sortOrder: z.number().optional(),
+});
+
 const works = defineCollection({
   loader: async () => {
     const supabaseUrl = import.meta.env.SUPABASE_URL;
@@ -55,4 +63,34 @@ const works = defineCollection({
   schema: workSchema,
 });
 
-export const collections = { works };
+const ipProjects = defineCollection({
+  loader: async () => {
+    const supabaseUrl = import.meta.env.SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      const seed = await import('./content/ip-projects.json');
+      return seed.default;
+    }
+
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data, error } = await supabase.from('ip_projects').select('*').order('sort_order', { ascending: true });
+    if (error) {
+      const seed = await import('./content/ip-projects.json');
+      return seed.default;
+    }
+
+    return data.map((row) => ({
+      id: row.id,
+      title: row.title,
+      genre: row.genre,
+      stage: row.stage,
+      logline: row.logline,
+      sortOrder: row.sort_order,
+    }));
+  },
+  schema: ipProjectSchema,
+});
+
+export const collections = { works, ipProjects };

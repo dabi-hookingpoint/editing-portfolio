@@ -1,0 +1,550 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="로그인 — Hooking Point">
+	<div class="page auth-page">
+		<h1>AUTH</h1>
+
+		<div class="auth-tabs">
+			<button class="tab active" data-tab="login">로그인</button>
+			<button class="tab" data-tab="signup">회원가입</button>
+		</div>
+
+		<div id="panel-login" class="auth-panel">
+			<form id="login-form" class="auth-form">
+				<div class="field">
+					<label for="login-email">이메일</label>
+					<input type="email" id="login-email" name="email" required placeholder="이메일 입력" />
+				</div>
+				<div class="field">
+					<label for="login-password">비밀번호</label>
+					<input type="password" id="login-password" name="password" required placeholder="비밀번호 입력" />
+				</div>
+				<p id="login-error" class="error" hidden></p>
+				<button type="submit" class="auth-btn">로그인</button>
+			</form>
+			<div class="auth-links">
+				<button type="button" class="link-btn" id="show-find-email">아이디 찾기</button>
+				<span class="divider">|</span>
+				<button type="button" class="link-btn" id="show-find-pw">비밀번호 찾기</button>
+			</div>
+		</div>
+
+		<div id="panel-signup" class="auth-panel" hidden>
+			<form id="signup-form" class="auth-form">
+				<div class="field">
+					<label for="signup-name">이름</label>
+					<input type="text" id="signup-name" name="name" required placeholder="이름 입력" />
+				</div>
+				<div class="field">
+					<label for="signup-phone">전화번호</label>
+					<input type="tel" id="signup-phone" name="phone" required placeholder="010-0000-0000" />
+				</div>
+				<div class="field">
+					<label for="signup-username">아이디</label>
+					<input type="text" id="signup-username" name="username" required placeholder="영문 소문자, 4자 이상" pattern="[a-z0-9]{4,}" />
+				</div>
+				<div class="field">
+					<label for="signup-email">이메일</label>
+					<input type="email" id="signup-email" name="email" required placeholder="이메일 입력" />
+				</div>
+				<div class="field">
+					<label for="signup-password">비밀번호</label>
+					<input type="password" id="signup-password" name="password" required minlength="6" placeholder="6자 이상 입력" />
+				</div>
+				<div class="field">
+					<label for="signup-affiliation">본인 소속</label>
+					<input type="text" id="signup-affiliation" name="affiliation" required placeholder="소속사/회사명 입력" />
+				</div>
+				<p id="signup-error" class="error" hidden></p>
+				<p id="signup-success" class="success" hidden></p>
+				<button type="submit" class="auth-btn">회원가입</button>
+			</form>
+		</div>
+
+		<div id="panel-find-email" class="auth-panel" hidden>
+			<div id="find-email-step1">
+				<p class="panel-desc">가입한 이메일 주소를 입력하시면 인증번호를 보내드립니다.</p>
+				<form id="find-email-form" class="auth-form">
+					<div class="field">
+						<label for="find-email-input">이메일</label>
+						<input type="email" id="find-email-input" required placeholder="가입한 이메일 입력" />
+					</div>
+					<p id="find-email-error" class="error" hidden></p>
+					<button type="submit" class="auth-btn">인증번호 받기</button>
+				</form>
+			</div>
+			<div id="find-email-step2" hidden>
+				<p class="panel-desc">이메일로 발송된 인증번호를 입력해주세요.</p>
+				<form id="find-email-verify-form" class="auth-form">
+					<div class="field">
+						<label for="find-email-code">인증번호</label>
+						<input type="text" id="find-email-code" required placeholder="인증번호 6자리 입력" maxlength="6" />
+					</div>
+					<p id="find-email-verify-error" class="error" hidden></p>
+					<p id="find-email-verify-success" class="success" hidden></p>
+					<button type="submit" class="auth-btn">인증하기</button>
+				</form>
+				<button type="button" class="link-btn" id="find-email-resend">인증번호 재발송</button>
+			</div>
+			<button type="button" class="back-btn" id="back-from-find-email">← 로그인으로 돌아가기</button>
+		</div>
+
+		<div id="panel-find-pw" class="auth-panel" hidden>
+			<div id="find-pw-step1">
+				<p class="panel-desc">가입한 이메일 주소를 입력하시면 인증번호를 보내드립니다.</p>
+				<form id="find-pw-form" class="auth-form">
+					<div class="field">
+						<label for="find-pw-input">이메일</label>
+						<input type="email" id="find-pw-input" required placeholder="가입한 이메일 입력" />
+					</div>
+					<p id="find-pw-error" class="error" hidden></p>
+					<button type="submit" class="auth-btn">인증번호 받기</button>
+				</form>
+			</div>
+			<div id="find-pw-step2" hidden>
+				<p class="panel-desc">이메일로 발송된 인증번호를 입력해주세요.</p>
+				<form id="find-pw-verify-form" class="auth-form">
+					<div class="field">
+						<label for="find-pw-code">인증번호</label>
+						<input type="text" id="find-pw-code" required placeholder="인증번호 6자리 입력" maxlength="6" />
+					</div>
+					<p id="find-pw-verify-error" class="error" hidden></p>
+					<button type="submit" class="auth-btn">인증하기</button>
+				</form>
+				<button type="button" class="link-btn" id="find-pw-resend">인증번호 재발송</button>
+			</div>
+			<div id="find-pw-step3" hidden>
+				<p class="panel-desc">새로운 비밀번호를 설정해주세요.</p>
+				<form id="find-pw-reset-form" class="auth-form">
+					<div class="field">
+						<label for="find-pw-new">새 비밀번호</label>
+						<input type="password" id="find-pw-new" required minlength="6" placeholder="6자 이상 입력" />
+					</div>
+					<div class="field">
+						<label for="find-pw-confirm">비밀번호 확인</label>
+						<input type="password" id="find-pw-confirm" required minlength="6" placeholder="비밀번호 다시 입력" />
+					</div>
+					<p id="find-pw-reset-error" class="error" hidden></p>
+					<p id="find-pw-reset-success" class="success" hidden></p>
+					<button type="submit" class="auth-btn">비밀번호 변경</button>
+				</form>
+			</div>
+			<button type="button" class="back-btn" id="back-from-find-pw">← 로그인으로 돌아가기</button>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { supabase } from '../lib/supabase';
+
+	const tabs = document.querySelectorAll<HTMLButtonElement>('.tab');
+	const panels = document.querySelectorAll<HTMLDivElement>('.auth-panel');
+
+	function switchTab(name: string) {
+		tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+		panels.forEach((p) => (p.hidden = true));
+		document.getElementById(`panel-${name}`)?.removeAttribute('hidden');
+	}
+
+	tabs.forEach((t) => t.addEventListener('click', () => switchTab(t.dataset.tab!)));
+
+	document.getElementById('show-find-email')?.addEventListener('click', () => switchTab('find-email'));
+	document.getElementById('show-find-pw')?.addEventListener('click', () => switchTab('find-pw'));
+	document.getElementById('back-from-find-email')?.addEventListener('click', () => {
+		switchTab('login');
+		resetFindEmail();
+	});
+	document.getElementById('back-from-find-pw')?.addEventListener('click', () => {
+		switchTab('login');
+		resetFindPw();
+	});
+
+	function resetFindEmail() {
+		document.getElementById('find-email-step1')?.removeAttribute('hidden');
+		document.getElementById('find-email-step2')?.setAttribute('hidden', '');
+		const err = document.getElementById('find-email-error');
+		const vErr = document.getElementById('find-email-verify-error');
+		const vSuc = document.getElementById('find-email-verify-success');
+		if (err) err.hidden = true;
+		if (vErr) vErr.hidden = true;
+		if (vSuc) vSuc.hidden = true;
+	}
+
+	function resetFindPw() {
+		document.getElementById('find-pw-step1')?.removeAttribute('hidden');
+		document.getElementById('find-pw-step2')?.setAttribute('hidden', '');
+		document.getElementById('find-pw-step3')?.setAttribute('hidden', '');
+		const err = document.getElementById('find-pw-error');
+		const vErr = document.getElementById('find-pw-verify-error');
+		const rErr = document.getElementById('find-pw-reset-error');
+		const rSuc = document.getElementById('find-pw-reset-success');
+		if (err) err.hidden = true;
+		if (vErr) vErr.hidden = true;
+		if (rErr) rErr.hidden = true;
+		if (rSuc) rSuc.hidden = true;
+	}
+
+	let findEmailTarget = '';
+
+	const loginForm = document.getElementById('login-form') as HTMLFormElement;
+	const loginError = document.getElementById('login-error');
+
+	loginForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (loginError) loginError.hidden = true;
+
+		const email = (document.getElementById('login-email') as HTMLInputElement).value;
+		const password = (document.getElementById('login-password') as HTMLInputElement).value;
+
+		const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+		if (error) {
+			if (loginError) {
+				loginError.textContent =
+					error.message === 'Invalid login credentials' ? '이메일 또는 비밀번호가 올바르지 않습니다.' : error.message;
+				loginError.hidden = false;
+			}
+			return;
+		}
+
+		window.location.href = '/ip-development';
+	});
+
+	const signupForm = document.getElementById('signup-form') as HTMLFormElement;
+	const signupError = document.getElementById('signup-error');
+	const signupSuccess = document.getElementById('signup-success');
+
+	signupForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (signupError) signupError.hidden = true;
+		if (signupSuccess) signupSuccess.hidden = true;
+
+		const name = (document.getElementById('signup-name') as HTMLInputElement).value.trim();
+		const phone = (document.getElementById('signup-phone') as HTMLInputElement).value.trim();
+		const username = (document.getElementById('signup-username') as HTMLInputElement).value.trim();
+		const email = (document.getElementById('signup-email') as HTMLInputElement).value;
+		const password = (document.getElementById('signup-password') as HTMLInputElement).value;
+		const affiliation = (document.getElementById('signup-affiliation') as HTMLInputElement).value.trim();
+
+		const { data: existing } = await supabase.from('profiles').select('id').eq('username', username).single();
+
+		if (existing) {
+			if (signupError) {
+				signupError.textContent = '이미 사용 중인 아이디입니다.';
+				signupError.hidden = false;
+			}
+			return;
+		}
+
+		const { error } = await supabase.auth.signUp({
+			email,
+			password,
+			options: {
+				data: { username, name, phone, affiliation },
+			},
+		});
+
+		if (error) {
+			if (signupError) {
+				signupError.textContent =
+					error.message === 'User already registered' ? '이미 가입된 이메일입니다.' : error.message;
+				signupError.hidden = false;
+			}
+			return;
+		}
+
+		if (signupSuccess) {
+			signupSuccess.textContent = '회원가입이 완료되었습니다. 이메일을 확인하여 인증 후 로그인해주세요.';
+			signupSuccess.hidden = false;
+		}
+		signupForm.reset();
+	});
+
+	// 아이디 찾기
+	const findEmailForm = document.getElementById('find-email-form') as HTMLFormElement;
+	const findEmailError = document.getElementById('find-email-error');
+
+	findEmailForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (findEmailError) findEmailError.hidden = true;
+
+		findEmailTarget = (document.getElementById('find-email-input') as HTMLInputElement).value;
+
+		const { error } = await supabase.auth.signInWithOtp({ email: findEmailTarget });
+
+		if (error) {
+			if (findEmailError) {
+				findEmailError.textContent = error.message;
+				findEmailError.hidden = false;
+			}
+			return;
+		}
+
+		document.getElementById('find-email-step1')?.setAttribute('hidden', '');
+		document.getElementById('find-email-step2')?.removeAttribute('hidden');
+	});
+
+	document.getElementById('find-email-resend')?.addEventListener('click', async () => {
+		await supabase.auth.signInWithOtp({ email: findEmailTarget });
+	});
+
+	const findEmailVerifyForm = document.getElementById('find-email-verify-form') as HTMLFormElement;
+	const findEmailVerifyError = document.getElementById('find-email-verify-error');
+	const findEmailVerifySuccess = document.getElementById('find-email-verify-success');
+
+	findEmailVerifyForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (findEmailVerifyError) findEmailVerifyError.hidden = true;
+		if (findEmailVerifySuccess) findEmailVerifySuccess.hidden = true;
+
+		const token = (document.getElementById('find-email-code') as HTMLInputElement).value;
+
+		const { error } = await supabase.auth.verifyOtp({ email: findEmailTarget, token, type: 'email' });
+
+		if (error) {
+			if (findEmailVerifyError) {
+				findEmailVerifyError.textContent = '인증번호가 올바르지 않습니다.';
+				findEmailVerifyError.hidden = false;
+			}
+			return;
+		}
+
+		if (findEmailVerifySuccess) {
+			findEmailVerifySuccess.textContent = `${findEmailTarget} 으로 가입된 계정을 확인했습니다.`;
+			findEmailVerifySuccess.hidden = false;
+		}
+
+		await supabase.auth.signOut();
+	});
+
+	// 비밀번호 찾기
+	const findPwForm = document.getElementById('find-pw-form') as HTMLFormElement;
+	const findPwError = document.getElementById('find-pw-error');
+
+	findPwForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (findPwError) findPwError.hidden = true;
+
+		findEmailTarget = (document.getElementById('find-pw-input') as HTMLInputElement).value;
+
+		const { error } = await supabase.auth.signInWithOtp({ email: findEmailTarget });
+
+		if (error) {
+			if (findPwError) {
+				findPwError.textContent = error.message;
+				findPwError.hidden = false;
+			}
+			return;
+		}
+
+		document.getElementById('find-pw-step1')?.setAttribute('hidden', '');
+		document.getElementById('find-pw-step2')?.removeAttribute('hidden');
+	});
+
+	document.getElementById('find-pw-resend')?.addEventListener('click', async () => {
+		await supabase.auth.signInWithOtp({ email: findEmailTarget });
+	});
+
+	const findPwVerifyForm = document.getElementById('find-pw-verify-form') as HTMLFormElement;
+	const findPwVerifyError = document.getElementById('find-pw-verify-error');
+
+	findPwVerifyForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (findPwVerifyError) findPwVerifyError.hidden = true;
+
+		const token = (document.getElementById('find-pw-code') as HTMLInputElement).value;
+
+		const { error } = await supabase.auth.verifyOtp({ email: findEmailTarget, token, type: 'email' });
+
+		if (error) {
+			if (findPwVerifyError) {
+				findPwVerifyError.textContent = '인증번호가 올바르지 않습니다.';
+				findPwVerifyError.hidden = false;
+			}
+			return;
+		}
+
+		document.getElementById('find-pw-step2')?.setAttribute('hidden', '');
+		document.getElementById('find-pw-step3')?.removeAttribute('hidden');
+	});
+
+	const findPwResetForm = document.getElementById('find-pw-reset-form') as HTMLFormElement;
+	const findPwResetError = document.getElementById('find-pw-reset-error');
+	const findPwResetSuccess = document.getElementById('find-pw-reset-success');
+
+	findPwResetForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		if (findPwResetError) findPwResetError.hidden = true;
+		if (findPwResetSuccess) findPwResetSuccess.hidden = true;
+
+		const newPw = (document.getElementById('find-pw-new') as HTMLInputElement).value;
+		const confirmPw = (document.getElementById('find-pw-confirm') as HTMLInputElement).value;
+
+		if (newPw !== confirmPw) {
+			if (findPwResetError) {
+				findPwResetError.textContent = '비밀번호가 일치하지 않습니다.';
+				findPwResetError.hidden = false;
+			}
+			return;
+		}
+
+		const { error } = await supabase.auth.updateUser({ password: newPw });
+
+		if (error) {
+			if (findPwResetError) {
+				findPwResetError.textContent = error.message;
+				findPwResetError.hidden = false;
+			}
+			return;
+		}
+
+		if (findPwResetSuccess) {
+			findPwResetSuccess.textContent = '비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.';
+			findPwResetSuccess.hidden = false;
+		}
+
+		await supabase.auth.signOut();
+
+		setTimeout(() => {
+			switchTab('login');
+			resetFindPw();
+		}, 2000);
+	});
+</script>
+
+<style>
+	.auth-page {
+		padding-top: 2rem;
+		max-width: 24rem;
+	}
+	h1 {
+		margin-bottom: 1rem;
+	}
+
+	.auth-tabs {
+		display: flex;
+		border-bottom: 1px solid var(--border);
+		margin-bottom: 1.5rem;
+	}
+	.tab {
+		flex: 1;
+		font: inherit;
+		padding: 0.7rem;
+		border: none;
+		background: none;
+		color: var(--muted);
+		font-weight: 600;
+		font-size: 0.95rem;
+		cursor: pointer;
+		border-bottom: 2px solid transparent;
+		transition: color 0.15s ease, border-color 0.15s ease;
+	}
+	.tab:hover {
+		color: var(--fg);
+	}
+	.tab.active {
+		color: var(--heading);
+		border-bottom-color: var(--heading);
+	}
+
+	.auth-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.field label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--heading);
+	}
+	.field input {
+		font: inherit;
+		padding: 0.7rem 0.9rem;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--surface);
+		color: var(--fg);
+		font-size: 0.95rem;
+	}
+	.field input:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+	.error {
+		color: #d32f2f;
+		font-size: 0.85rem;
+		margin: 0;
+	}
+	.success {
+		color: #2e7d32;
+		font-size: 0.85rem;
+		margin: 0;
+	}
+	.auth-btn {
+		font: inherit;
+		padding: 0.8rem;
+		border: none;
+		border-radius: 6px;
+		background: var(--heading);
+		color: #fff;
+		font-weight: 700;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+	}
+	.auth-btn:hover {
+		background: var(--accent);
+	}
+
+	.auth-links {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.8rem;
+		margin-top: 1.2rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--border);
+	}
+	.link-btn {
+		font: inherit;
+		background: none;
+		border: none;
+		color: var(--muted);
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition: color 0.15s ease;
+	}
+	.link-btn:hover {
+		color: var(--heading);
+	}
+	.divider {
+		color: var(--border);
+	}
+
+	.panel-desc {
+		color: var(--muted);
+		font-size: 0.9rem;
+		margin-bottom: 1.2rem;
+		line-height: 1.5;
+	}
+	.back-btn {
+		font: inherit;
+		background: none;
+		border: none;
+		color: var(--muted);
+		font-size: 0.85rem;
+		cursor: pointer;
+		margin-top: 1rem;
+		transition: color 0.15s ease;
+	}
+	.back-btn:hover {
+		color: var(--heading);
+	}
+</style>

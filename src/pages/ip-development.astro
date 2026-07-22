@@ -1,12 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import projects from '../content/ip-projects.json';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('ipProjects')).sort(
+	(a, b) => (a.data.sortOrder ?? 0) - (b.data.sortOrder ?? 0)
+);
 ---
 
 <Layout title="IP Development — Hooking Point">
 	<div class="page">
 		<h1>IP DEVELOPMENT</h1>
-		<p class="intro">현재 개발 중인 오리지널 IP입니다. 상세 시놉시스는 공개하지 않으며, 자료가 필요하시면 자료 요청을 남겨주세요.</p>
+		<p class="intro">현재 개발 중인 오리지널 IP입니다. 상세 시놉시스는 로그인 후 확인 가능합니다.</p>
 
 		<ul class="ip-grid">
 			{projects.map((p) => (
@@ -14,15 +18,16 @@ import projects from '../content/ip-projects.json';
 					<button
 						type="button"
 						class="ip-card"
-						data-title={p.title}
-						data-genre={p.genre}
-						data-stage={p.stage}
-						data-logline={p.logline}
+						data-id={p.id}
+						data-title={p.data.title}
+						data-genre={p.data.genre}
+						data-stage={p.data.stage}
+						data-logline={p.data.logline}
 					>
 						<span class="poster-placeholder" aria-hidden="true"></span>
-						<span class="stage-badge">{p.stage}</span>
-						<span class="ip-title">{p.title}</span>
-						<span class="ip-genre">{p.genre}</span>
+						<span class="stage-badge">{p.data.stage}</span>
+						<span class="ip-title">{p.data.title}</span>
+						<span class="ip-genre">{p.data.genre}</span>
 					</button>
 				</li>
 			))}
@@ -35,22 +40,55 @@ import projects from '../content/ip-projects.json';
 		<h2 id="ip-dialog-title"></h2>
 		<p class="dialog-genre" id="ip-dialog-genre"></p>
 		<p class="dialog-logline" id="ip-dialog-logline"></p>
+		<div class="dialog-synopsis">
+			<h3>상세 시놉시스</h3>
+			<p id="ip-dialog-synopsis">불러오는 중…</p>
+		</div>
 		<a id="ip-dialog-request" class="request-btn" href="#">자료 요청 →</a>
+	</dialog>
+
+	<dialog id="login-dialog">
+		<button type="button" id="login-dialog-close" aria-label="닫기">✕</button>
+		<div class="login-dialog-content">
+			<h2>로그인이 필요합니다</h2>
+			<p>IP 상세 시놉시스를 열람하려면 로그인해주세요.</p>
+			<a href="/login" class="login-dialog-btn">로그인하러 가기 →</a>
+		</div>
 	</dialog>
 </Layout>
 
 <script>
+	import { supabase } from '../lib/supabase';
+
 	const dialog = document.getElementById('ip-dialog') as HTMLDialogElement;
 	const closeBtn = document.getElementById('ip-dialog-close');
 	const titleEl = document.getElementById('ip-dialog-title');
 	const genreEl = document.getElementById('ip-dialog-genre');
 	const stageEl = document.getElementById('ip-dialog-stage');
 	const loglineEl = document.getElementById('ip-dialog-logline');
+	const synopsisEl = document.getElementById('ip-dialog-synopsis');
 	const requestEl = document.getElementById('ip-dialog-request') as HTMLAnchorElement;
 
+	const loginDialog = document.getElementById('login-dialog') as HTMLDialogElement;
+	const loginCloseBtn = document.getElementById('login-dialog-close');
+
+	let isLoggedIn = false;
+
+	async function checkAuth() {
+		const { data: { session } } = await supabase.auth.getSession();
+		isLoggedIn = !!session;
+	}
+	checkAuth();
+
 	document.querySelectorAll<HTMLButtonElement>('.ip-card').forEach((card) => {
-		card.addEventListener('click', () => {
-			const { title, genre, stage, logline } = card.dataset;
+		card.addEventListener('click', async () => {
+			const { id, title, genre, stage, logline } = card.dataset;
+
+			if (!isLoggedIn) {
+				loginDialog.showModal();
+				return;
+			}
+
 			if (titleEl) titleEl.textContent = title ?? '';
 			if (genreEl) genreEl.textContent = genre ?? '';
 			if (stageEl) stageEl.textContent = stage ?? '';
@@ -58,13 +96,31 @@ import projects from '../content/ip-projects.json';
 			if (requestEl) {
 				requestEl.href = `mailto:contact@hookingpoint.kr?subject=${encodeURIComponent(`[${title}] 자료 요청`)}`;
 			}
+			if (synopsisEl) synopsisEl.textContent = '불러오는 중…';
 			dialog.showModal();
+
+			const { data, error } = await supabase
+				.from('ip_project_synopses')
+				.select('synopsis')
+				.eq('project_id', id)
+				.maybeSingle();
+
+			if (synopsisEl) {
+				synopsisEl.textContent = error || !data
+					? '아직 등록된 상세 시놉시스가 없습니다.'
+					: data.synopsis;
+			}
 		});
 	});
 
 	closeBtn?.addEventListener('click', () => dialog.close());
 	dialog.addEventListener('click', (e) => {
 		if (e.target === dialog) dialog.close();
+	});
+
+	loginCloseBtn?.addEventListener('click', () => loginDialog.close());
+	loginDialog.addEventListener('click', (e) => {
+		if (e.target === loginDialog) loginDialog.close();
 	});
 </script>
 
@@ -143,11 +199,12 @@ import projects from '../content/ip-projects.json';
 		border-radius: 10px;
 		padding: 2rem;
 		box-shadow: var(--shadow-hover);
+		position: relative;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.6);
 	}
-	#ip-dialog-close {
+	dialog button[aria-label="닫기"] {
 		position: absolute;
 		top: 1rem;
 		right: 1rem;
@@ -157,7 +214,7 @@ import projects from '../content/ip-projects.json';
 		font-size: 1.1rem;
 		cursor: pointer;
 	}
-	#ip-dialog-close:hover {
+	dialog button[aria-label="닫기"]:hover {
 		color: var(--fg);
 	}
 	.dialog-stage {
@@ -182,6 +239,21 @@ import projects from '../content/ip-projects.json';
 		margin: 0 0 1.5rem;
 		line-height: 1.6;
 	}
+	.dialog-synopsis {
+		border-top: 1px solid var(--border);
+		padding-top: 1.2rem;
+		margin-bottom: 1.5rem;
+	}
+	.dialog-synopsis h3 {
+		margin: 0 0 0.6rem;
+		font-size: 0.85rem;
+		color: var(--heading);
+	}
+	.dialog-synopsis p {
+		margin: 0;
+		line-height: 1.6;
+		color: var(--fg);
+	}
 	.request-btn {
 		display: inline-block;
 		border: 1px solid var(--heading);
@@ -193,6 +265,33 @@ import projects from '../content/ip-projects.json';
 		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 	}
 	.request-btn:hover {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+
+	.login-dialog-content {
+		text-align: center;
+		padding: 1rem 0;
+	}
+	.login-dialog-content h2 {
+		margin: 0 0 0.8rem;
+		font-size: 1.2rem;
+	}
+	.login-dialog-content p {
+		margin: 0 0 1.5rem;
+		color: var(--muted);
+	}
+	.login-dialog-btn {
+		display: inline-block;
+		border: 1px solid var(--heading);
+		border-radius: 4px;
+		padding: 0.8rem 1.5rem;
+		font-weight: 700;
+		color: var(--heading);
+		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	}
+	.login-dialog-btn:hover {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: #fff;
