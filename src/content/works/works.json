@@ -1,7 +1,7 @@
 [
   {
     "id": "merry-berry-love",
-    "image": "/images/works/merry-berry-love.jpg",
+    "image": "/images/works/merry-berry-love.png",
     "title": "메리 베리 러브",
     "releaseYear": 2026,
     "genre": "로맨스",
@@ -16,7 +16,7 @@
   },
   {
     "id": "joseon-attorney",
-    "image": "/images/works/joseon-attorney.jpg",
+    "image": "/images/works/joseon-attorney.png",
     "title": "조선변호사",
     "releaseYear": 2023,
     "genre": "사극 법정극",
@@ -31,7 +31,7 @@
   },
   {
     "id": "last-woman-on-earth",
-    "image": "/images/works/last-woman-on-earth.jpg",
+    "image": "/images/works/last-woman-on-earth.png",
     "title": "지구 최후의 여자",
     "releaseYear": 2026,
     "genre": "드라마, 코미디",
