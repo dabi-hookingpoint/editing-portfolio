@@ -246,6 +246,20 @@ const currentPath = Astro.url.pathname;
 				color: var(--muted);
 				font-size: 0.8rem;
 			}
+
+			@media (max-width: 640px) {
+				/* 왼쪽 아이콘 사이드바가 같은 역할을 하므로, 좁은 화면에서는
+				   겹치고 잘리는 상단 텍스트 메뉴를 숨깁니다. */
+				.site-nav {
+					display: none;
+				}
+				.site-header {
+					padding: 1.25rem 1rem;
+				}
+				.page {
+					padding: 0 1rem 3rem;
+				}
+			}
 		</style>
 	</head>
 	<body>
