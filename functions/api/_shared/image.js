@@ -27,15 +27,18 @@ async function translateToEnglish(text, aiBinding) {
 }
 
 async function genWorkersAI(prompt, aiBinding) {
-  // flux-1-schnell은 영어 프롬프트에 최적화되어 있어, 한글 프롬프트는 먼저
-  // 같은 Workers AI의 번역 모델로 영어로 바꿔서 정확도를 높입니다.
+  // 한글 프롬프트는 먼저 같은 Workers AI의 번역 모델로 영어로 바꾸고,
+  // flux-1-schnell(초고속·저품질) 대신 SDXL로 생성해 복잡한 씬 묘사의 정확도를 높입니다.
   const translatedPrompt = await translateToEnglish(prompt, aiBinding);
-  const result = await aiBinding.run("@cf/black-forest-labs/flux-1-schnell", {
+  const output = await aiBinding.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", {
     prompt: translatedPrompt,
-    steps: 4,
+    num_steps: 20,
   });
-  if (!result?.image) throw new Error("Cloudflare Workers AI가 이미지를 반환하지 않았습니다.");
-  return { url: `data:image/jpeg;base64,${result.image}`, provider: "workers-ai:flux-1-schnell" };
+  const arrayBuffer = output instanceof ArrayBuffer ? output : await new Response(output).arrayBuffer();
+  if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+    throw new Error("Cloudflare Workers AI가 이미지를 반환하지 않았습니다.");
+  }
+  return { url: `data:image/png;base64,${arrayBufferToBase64(arrayBuffer)}`, provider: "workers-ai:sdxl" };
 }
 
 async function genColab(prompt, endpointUrl, sharedSecret) {
