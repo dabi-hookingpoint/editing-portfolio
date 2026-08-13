@@ -34,7 +34,7 @@ const currentPath = Astro.url.pathname;
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=1180" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<style is:global>
@@ -245,20 +245,6 @@ const currentPath = Astro.url.pathname;
 				border-top: 1px solid var(--border);
 				color: var(--muted);
 				font-size: 0.8rem;
-			}
-
-			@media (max-width: 640px) {
-				/* 왼쪽 아이콘 사이드바가 같은 역할을 하므로, 좁은 화면에서는
-				   겹치고 잘리는 상단 텍스트 메뉴를 숨깁니다. */
-				.site-nav {
-					display: none;
-				}
-				.site-header {
-					padding: 1.25rem 1rem;
-				}
-				.page {
-					padding: 0 1rem 3rem;
-				}
 			}
 		</style>
 	</head>
