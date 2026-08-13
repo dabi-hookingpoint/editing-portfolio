@@ -221,12 +221,15 @@ import Layout from '../layouts/Layout.astro';
 			<div class="list-item">
 				<span class="item-title">
 					${u.email || '(이메일 없음)'}
-					<small class="item-meta">${u.role === 'admin' ? '관리자' : '일반 사용자'}</small>
+					<small class="item-meta">${u.role === 'admin' ? '관리자' : '일반 사용자'}${u.ai_tools_access ? ' · AI 도구 사용 가능' : ''}</small>
 				</span>
 				<span class="item-actions">
 					${u.id !== currentUserId ? `
 						<button class="role-btn" data-user-id="${u.id}" data-current-role="${u.role}">
 							${u.role === 'admin' ? '관리자 해제' : '관리자 지정'}
+						</button>
+						<button class="ai-access-btn" data-user-id="${u.id}" data-current-access="${u.ai_tools_access}">
+							${u.ai_tools_access ? 'AI 도구 권한 해제' : 'AI 도구 권한 부여'}
 						</button>
 						<button class="delete-btn" data-user-id="${u.id}">삭제</button>
 					` : '<span class="self-badge">본인</span>'}
@@ -240,6 +243,16 @@ import Layout from '../layouts/Layout.astro';
 				const newRole = btn.dataset.currentRole === 'admin' ? 'user' : 'admin';
 				if (!confirm(`역할을 ${newRole === 'admin' ? '관리자' : '일반 사용자'}로 변경하시겠습니까?`)) return;
 				await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+				loadUsers();
+			};
+		});
+
+		list.querySelectorAll<HTMLButtonElement>('.ai-access-btn').forEach((btn) => {
+			btn.onclick = async () => {
+				const userId = btn.dataset.userId!;
+				const grant = btn.dataset.currentAccess !== 'true';
+				if (!confirm(`AI 도구(회의 녹음/분석/이미지 생성) 사용 권한을 ${grant ? '부여' : '해제'}하시겠습니까?`)) return;
+				await supabase.from('profiles').update({ ai_tools_access: grant }).eq('id', userId);
 				loadUsers();
 			};
 		});
@@ -453,13 +466,14 @@ import Layout from '../layouts/Layout.astro';
 		padding: 0.7rem 1.2rem;
 		border: none;
 		border-radius: 4px;
-		background: var(--heading);
+		background: var(--surface-strong);
 		color: #fff;
 		font-weight: 700;
 		cursor: pointer;
 	}
 	.auth-btn:hover {
 		background: var(--accent);
+		color: var(--heading);
 	}
 	.error {
 		color: #d32f2f;
@@ -493,7 +507,7 @@ import Layout from '../layouts/Layout.astro';
 	}
 	.logout-btn:hover {
 		border-color: var(--accent);
-		color: var(--accent);
+		color: var(--heading);
 	}
 
 	.admin-section {
@@ -516,7 +530,7 @@ import Layout from '../layouts/Layout.astro';
 		transition: background-color 0.15s ease, color 0.15s ease;
 	}
 	.add-btn:hover {
-		background: var(--heading);
+		background: var(--surface-strong);
 		color: #fff;
 	}
 
@@ -576,13 +590,14 @@ import Layout from '../layouts/Layout.astro';
 		padding: 0.6rem 1.5rem;
 		border: none;
 		border-radius: 4px;
-		background: var(--heading);
+		background: var(--surface-strong);
 		color: #fff;
 		font-weight: 700;
 		cursor: pointer;
 	}
 	.save-btn:hover {
 		background: var(--accent);
+		color: var(--heading);
 	}
 	.cancel-btn {
 		font: inherit;
@@ -656,8 +671,23 @@ import Layout from '../layouts/Layout.astro';
 		transition: background-color 0.15s ease, color 0.15s ease;
 	}
 	.role-btn:hover {
-		background: var(--heading);
+		background: var(--surface-strong);
 		color: #fff;
+	}
+	.ai-access-btn {
+		font: inherit;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--accent);
+		border-radius: 4px;
+		background: none;
+		color: var(--heading);
+		cursor: pointer;
+		font-size: 0.8rem;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+	.ai-access-btn:hover {
+		background: var(--accent);
+		color: var(--heading);
 	}
 	.self-badge {
 		font-size: 0.75rem;

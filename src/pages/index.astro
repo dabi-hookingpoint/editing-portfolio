@@ -5,87 +5,182 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Hooking Point">
 	<div class="hero-bg">
 		<div class="page hero">
-			<p class="tagline">(회사 소개 한 줄 작성 예정 — 알려주시면 반영할게요)</p>
+			<svg class="hero-symbol" width="300" height="281" viewBox="0 0 80 75" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<circle class="ripple ripple-1" cx="40" cy="42" r="6" fill="none" stroke="#134DEC" stroke-width="1.2" />
+				<circle class="ripple ripple-2" cx="40" cy="42" r="6" fill="none" stroke="#134DEC" stroke-width="1.2" />
 
-			<div class="axes">
-				<a class="axis" href="/filmography">
-					<span class="axis-label">01 · EDITING</span>
-					<h2>편집</h2>
-					<p>드라마·영화·다큐를 넘나들며 이야기의 리듬을 설계합니다.</p>
-					<span class="axis-link">EDITING / WORKS 보기 →</span>
-				</a>
-				<a class="axis" href="/ip-development">
-					<span class="axis-label">02 · IP DEVELOPMENT</span>
-					<h2>IP기획</h2>
-					<p>편집실에서 쌓은 이야기 감각으로 새로운 오리지널 IP를 기획합니다.</p>
-					<span class="axis-link">IP DEVELOPMENT 보기 →</span>
-				</a>
-			</div>
+				<g class="sym-rings">
+					<g filter="url(#filter1_d_35_1452)">
+						<path d="M41.3389 33.1706C55.0586 33.4138 65 37.3795 65 42.237L64.9922 42.4714C64.6677 47.3771 54.1819 51.3161 40 51.3161L38.6602 51.3034C24.9408 51.0602 15.0002 47.0944 15 42.237C15 37.2228 25.5927 33.1579 40 33.1579L41.3389 33.1706ZM40 34.9733C32.9378 34.9733 26.9057 35.9723 22.7061 37.5231C20.5997 38.301 19.0483 39.1838 18.0566 40.0681C17.0663 40.9513 16.7861 41.6889 16.7861 42.237C16.7862 42.7851 17.0663 43.5228 18.0566 44.406C19.0483 45.2902 20.5998 46.172 22.7061 46.9499C26.9057 48.5008 32.9377 49.4997 40 49.4997C47.0622 49.4997 53.0943 48.5008 57.2939 46.9499C59.3998 46.1722 60.9508 45.29 61.9424 44.406C62.9327 43.5228 63.2138 42.7851 63.2139 42.237C63.2139 41.6889 62.9328 40.9513 61.9424 40.0681C60.9507 39.1839 59.4 38.3009 57.2939 37.5231C53.0943 35.9723 47.0622 34.9734 40 34.9733Z" fill="#96ADEE" />
+					</g>
+					<g filter="url(#filter2_d_35_1452)">
+						<path d="M59.5652 42.2369H57.7795C57.7795 42.0709 57.6857 41.6405 56.9041 40.9974C56.1376 40.3668 54.919 39.7196 53.2559 39.1408C49.9467 37.9891 45.2593 37.2435 39.9992 37.2435C34.7394 37.2435 30.0533 37.9892 26.7442 39.1408C25.0811 39.7196 23.8625 40.3668 23.0961 40.9974C22.3145 41.6405 22.2206 42.0709 22.2206 42.2369H20.4349C20.4349 38.4764 29.1941 35.4278 39.9992 35.4277C50.8047 35.4277 59.5652 38.4763 59.5652 42.2369Z" fill="#5D82E9" />
+					</g>
+					<g filter="url(#filter3_d_35_1452)">
+						<path d="M40.0005 38.454L41.3328 38.4735C47.9097 38.6671 53.0418 40.2778 53.0428 42.2363H50.9641C50.5176 41.9435 49.7822 41.613 48.7337 41.3089C46.5734 40.6823 43.4849 40.2698 40.0005 40.2698C36.5162 40.2698 33.4277 40.6824 31.2673 41.3089C30.2172 41.6134 29.4799 41.9432 29.0335 42.2363H26.9565C26.9576 40.1473 32.7976 38.454 40.0005 38.454Z" fill="#1440B8" />
+					</g>
+					<g filter="url(#filter4_d_35_1452)">
+						<path d="M29.033 42.2361C29.4794 42.5293 30.2168 42.8612 31.2673 43.1658C33.4277 43.7923 36.5166 44.2049 40.0007 44.2049C43.4847 44.2048 46.5729 43.7923 48.7332 43.1658C49.782 42.8616 50.5171 42.529 50.9636 42.2361H53.0427C53.0427 44.3253 47.204 46.0202 40.0007 46.0203L38.6667 46.0008C32.0894 45.8071 26.9568 44.1948 26.9568 42.2361H29.033Z" fill="#1440B8" />
+					</g>
+					<g filter="url(#filter5_d_35_1452)">
+						<path d="M22.2211 42.2369C22.2211 42.4028 22.3147 42.8331 23.0961 43.4761C23.8626 44.1067 25.0815 44.7538 26.7445 45.3326C30.0536 46.4842 34.7396 47.2299 39.9994 47.23C45.2595 47.23 49.9469 46.4843 53.2562 45.3326C54.9193 44.7538 56.1382 44.1067 56.9047 43.4761C57.6859 42.8332 57.7797 42.4028 57.7797 42.2369H59.5658L59.5394 42.5875C59.0143 46.1849 50.4665 49.0464 39.9994 49.0464C29.1943 49.0463 20.435 45.9974 20.4349 42.2369H22.2211Z" fill="#5D82E9" />
+					</g>
+				</g>
+
+				<ellipse class="sym-ball" cx="39.5878" cy="42.5527" rx="5.35711" ry="5.44736" fill="#F5F5FA" />
+
+				<g class="sym-hook">
+					<path d="M38.0769 52.1053L38.0769 47.3684L41.1538 47.3684L41.1538 52.1053L38.0769 52.1053Z" fill="#F5F5FA" />
+					<path d="M35.4031 57.1411C37.8676 57.1411 38.0768 52.8745 38.0768 52.1053H41.1537C41.1537 60 36.4559 60 35.4031 60C34.3503 60 32.5278 59.6426 31.4574 57.5772L30.8848 56.069L29.6152 52.2228L32.5279 53.2101L35.3658 54.074L32.8444 54.1459L33.7601 56.069C34.1708 56.7837 34.955 57.1411 35.4031 57.1411Z" fill="#F5F5FA" />
+				</g>
+
+				<g class="sym-letters">
+					<path d="M30.9233 23.6846H37.9995L38.0005 26.8418H30.9233V33.0938C30.5003 33.1584 29.615 33.1582 27.3843 33.7588V15H30.9233V23.6846ZM42.5737 15C43.8736 15 46.8412 15.2348 47.3081 15.3945C50.7693 16.5788 51.1538 19.342 51.1538 20.9209C51.1537 22.0938 51.154 24.0793 49.231 25.6582C47.6925 26.8424 45.6652 26.8418 42.6919 26.8418H38.0005V15H42.5737ZM41.2124 23.6846H42.5737C46.4614 23.6846 47.0743 23.1059 47.3081 22.8945C47.9688 22.297 48.0765 21.2027 48.0767 20.9209C48.0766 19.6194 47.3075 18.9476 46.4614 18.6318C45.7305 18.3591 43.5086 18.2178 42.5737 18.2178H41.2124V23.6846Z" fill="url(#paint0_linear_35_1452)" />
+					<path d="M38.0769 37.8948L38.0769 15L41.1538 15L41.1538 37.8948L38.0769 37.8948Z" fill="#F5F5FA" />
+				</g>
+
+				<defs>
+					<filter id="filter1_d_35_1452" x="13" y="32.1579" width="54" height="22.1582" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+						<feFlood flood-opacity="0" result="BackgroundImageFix" /><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" /><feOffset dy="1" /><feGaussianBlur stdDeviation="1" /><feComposite in2="hardAlpha" operator="out" /><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0" /><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_35_1452" /><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_35_1452" result="shape" />
+					</filter>
+					<filter id="filter2_d_35_1452" x="18.4349" y="34.4277" width="43.1302" height="10.8092" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+						<feFlood flood-opacity="0" result="BackgroundImageFix" /><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" /><feOffset dy="1" /><feGaussianBlur stdDeviation="1" /><feComposite in2="hardAlpha" operator="out" /><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.25 0" /><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_35_1452" /><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_35_1452" result="shape" />
+					</filter>
+					<filter id="filter3_d_35_1452" x="25.9565" y="38.454" width="28.0863" height="5.7823" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+						<feFlood flood-opacity="0" result="BackgroundImageFix" /><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" /><feOffset dy="1" /><feGaussianBlur stdDeviation="0.5" /><feComposite in2="hardAlpha" operator="out" /><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.25 0" /><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_35_1452" /><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_35_1452" result="shape" />
+					</filter>
+					<filter id="filter4_d_35_1452" x="25.9568" y="42.2361" width="28.0859" height="5.78418" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+						<feFlood flood-opacity="0" result="BackgroundImageFix" /><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" /><feOffset dy="1" /><feGaussianBlur stdDeviation="0.5" /><feComposite in2="hardAlpha" operator="out" /><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.25 0" /><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_35_1452" /><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_35_1452" result="shape" />
+					</filter>
+					<filter id="filter5_d_35_1452" x="18.4349" y="41.2369" width="43.1309" height="10.8096" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+						<feFlood flood-opacity="0" result="BackgroundImageFix" /><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" /><feOffset dy="1" /><feGaussianBlur stdDeviation="1" /><feComposite in2="hardAlpha" operator="out" /><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.25 0" /><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_35_1452" /><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_35_1452" result="shape" />
+					</filter>
+					<linearGradient id="paint0_linear_35_1452" x1="39.7692" y1="15" x2="28.7829" y2="30.1275" gradientUnits="userSpaceOnUse">
+						<stop stop-color="#F5F5FA" /><stop offset="1" stop-color="#CACACA" />
+					</linearGradient>
+				</defs>
+			</svg>
+			<img class="hero-word" src="/images/brand/wordmark-white.png" alt="Hooking Point" />
 		</div>
 	</div>
 </Layout>
 
 <style>
 	.hero-bg {
-		background:
-			radial-gradient(640px circle at 12% 15%, rgba(42, 59, 143, 0.1), transparent 60%),
-			radial-gradient(560px circle at 88% 55%, rgba(255, 107, 74, 0.09), transparent 60%);
+		min-height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: radial-gradient(900px circle at 50% 50%, rgba(19, 77, 236, 0.22), transparent 70%);
 	}
 	.hero {
-		padding-top: 4rem;
-		padding-bottom: 6rem;
-	}
-	.tagline {
-		max-width: 34rem;
-		font-size: 1.6rem;
-		line-height: 1.5;
-		color: var(--heading);
-		margin: 0 0 4rem;
-	}
-	.axes {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 1.5rem;
-	}
-	@media (max-width: 700px) {
-		.axes {
-			grid-template-columns: 1fr;
-		}
-	}
-	.axis {
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		padding: 2rem;
+		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		box-shadow: var(--shadow);
-		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+		align-items: center;
 	}
-	.axis:hover {
-		border-color: var(--accent);
-		box-shadow: var(--shadow-hover);
-		transform: translateY(-2px);
+	.hero-symbol {
+		overflow: visible;
 	}
-	.axis-label {
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		color: var(--heading);
+	.hero-word {
+		margin: 0.15rem 0 0;
+		width: 220px;
+		height: auto;
 	}
-	.axis h2 {
-		margin: 0;
-		font-size: 1.5rem;
+
+	.sym-ball {
+		transform-origin: 39.59px 42.55px;
 	}
-	.axis p {
-		margin: 0;
-		color: var(--muted);
+	.sym-rings {
+		transform-origin: 40px 42px;
 	}
-	.axis-link {
-		margin-top: 0.75rem;
-		font-size: 0.9rem;
-		font-weight: 600;
-		color: var(--heading);
+	.ripple {
+		transform-origin: 40px 42px;
+		opacity: 0;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		/* 1) 찌와 후크가 함께 떨어진다 */
+		.sym-ball {
+			animation: ball-drop 0.7s cubic-bezier(0.32, 1.3, 0.6, 1) both;
+		}
+		.sym-hook {
+			opacity: 0;
+			animation: ball-drop 0.7s cubic-bezier(0.32, 1.3, 0.6, 1) both;
+		}
+		/* 2) 그 다음 물결이 퍼진다 */
+		.ripple-1 {
+			animation: ripple-out 1.1s ease-out 0.65s both;
+		}
+		.ripple-2 {
+			animation: ripple-out 1.1s ease-out 0.8s both;
+		}
+		.sym-rings {
+			opacity: 0;
+			animation: rings-in 0.7s ease-out 0.7s both;
+		}
+		/* 3) 물결이 생기고 0.3초 후, 심볼 전체 프레임이 서서히 또렷해진다 */
+		.sym-letters {
+			opacity: 0;
+			animation: letters-in 1.2s ease-in-out 0.95s both;
+		}
+		.hero-word {
+			opacity: 0;
+			animation: word-in 0.8s ease-out 2.15s both;
+		}
+	}
+
+	@keyframes ball-drop {
+		0% {
+			transform: translateY(-140px);
+			opacity: 0;
+		}
+		55% {
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+	@keyframes rings-in {
+		from {
+			opacity: 0;
+			transform: scale(0.35);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+	@keyframes letters-in {
+		from {
+			opacity: 0;
+			filter: blur(7px);
+		}
+		to {
+			opacity: 1;
+			filter: blur(0);
+		}
+	}
+	@keyframes word-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@keyframes ripple-out {
+		0% {
+			transform: scale(0.3);
+			opacity: 0.9;
+		}
+		100% {
+			transform: scale(4.5);
+			opacity: 0;
+		}
 	}
 </style>

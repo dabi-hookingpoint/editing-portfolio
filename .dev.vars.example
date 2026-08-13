@@ -1,0 +1,18 @@
+# wrangler pages dev 로컬 테스트용 환경변수. 복사해서 .dev.vars로 저장하세요 (.dev.vars는 git에 커밋하지 마세요).
+# 실제 배포 환경 변수는 Cloudflare Pages 대시보드 > Settings > Environment variables 에 동일한 이름으로 등록합니다.
+
+PUBLIC_SUPABASE_URL=
+PUBLIC_SUPABASE_ANON_KEY=
+
+# 텍스트 분석/레퍼런스 추천용 LLM 키 — 없으면 자동으로 규칙 기반(휴리스틱) 엔진으로 대체됩니다.
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+
+# 컨셉 이미지 생성(Diffusion) — 아래 중 하나만 채우면 됩니다. 우선순위: Colab > Stability > OpenAI > Replicate > 목업.
+# Colab GPU로 직접 돌리는 Stable Diffusion 서버 (docs/colab-stable-diffusion-server.ipynb 참고).
+# 노트북을 실행하면 출력되는 ngrok URL을 아래에 붙여넣으세요. 노트북을 끄면 이 URL은 만료됩니다.
+COLAB_ENDPOINT_URL=
+COLAB_SHARED_SECRET=
+
+STABILITY_API_KEY=
+REPLICATE_API_TOKEN=
