@@ -101,6 +101,34 @@
     "sortOrder": 4
   },
   {
+    "id": "boys-be-brave",
+    "image": "/images/works/boys-be-brave.png",
+    "title": "고백을 못하고",
+    "releaseYear": 2024,
+    "genre": "BL 로맨틱 코미디",
+    "editingApproach": "(편집 포인트 작성 예정 — 알려주시면 반영할게요)",
+    "type": "드라마",
+    "synopsis": "단짝친구이자 짝사랑 상대인 '기섭'이 며칠만 신세 지겠다며 들어와 살게 되면서, 마음을 들킬까 조마조마해하는 '진우'. 소꿉친구 '밝음'과 '인호'까지 얽히며, 좋아하지만 고백하지 못하고 애태우는 두 커플의 밀당을 그린 청춘 BL 로맨틱 코미디. 웹툰 작가 석영의 동명 웹툰(미스터블루)이 원작이다.",
+    "airPeriod": {
+      "start": "2024.04.25",
+      "end": "2024.05.16"
+    },
+    "director": "임현희",
+    "productionCompany": "페이지원필름, 뉴블랙스튜디오, 와이원엔터테인먼트",
+    "writer": "이신원",
+    "cast": [
+      "김성현",
+      "남시안",
+      "정여준",
+      "안세민"
+    ],
+    "watchLink": {
+      "label": "티빙에서 보기",
+      "url": "https://www.tving.com/contents/P001757559"
+    },
+    "sortOrder": 5
+  },
+  {
     "id": "joseon-attorney",
     "image": "/images/works/joseon-attorney.png",
     "title": "조선변호사",
@@ -125,7 +153,7 @@
       "label": "웨이브에서 보기",
       "url": "https://www.wavve.com"
     },
-    "sortOrder": 5
+    "sortOrder": 6
   },
   {
     "id": "ingan-siljyeok",
@@ -153,7 +181,7 @@
       "label": "티빙에서 보기",
       "url": "https://www.tving.com/contents/P001506481"
     },
-    "sortOrder": 6
+    "sortOrder": 7
   },
   {
     "id": "night-of-the-undead",
@@ -178,7 +206,7 @@
       "label": "씨네21에서 보기",
       "url": "https://cine21.com/movie/info/?movie_id=54194"
     },
-    "sortOrder": 7
+    "sortOrder": 8
   },
   {
     "id": "the-cursed",
@@ -206,7 +234,7 @@
       "label": "티빙에서 보기",
       "url": "https://www.tving.com/contents/P001153248"
     },
-    "sortOrder": 8
+    "sortOrder": 9
   },
   {
     "id": "a-long-way-around",
@@ -238,6 +266,6 @@
       "인디페스트 필름 어워즈 수상 (2019)",
       "제9회 유타 국제영화제 세미파이널리스트 (2019)"
     ],
-    "sortOrder": 9
+    "sortOrder": 10
   }
 ]
