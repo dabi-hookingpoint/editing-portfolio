@@ -1,8 +1,12 @@
 -- ============================================================
 -- 전체 초기 셋업 (한 번에 실행) — auth-tables.sql + ip-synopsis-gating.sql
--- + ai-tools-access.sql + ip-detail-access.sql + 프로젝트 5개 시드를
--- 순서대로 합친 파일입니다. Supabase SQL Editor에 그대로 붙여넣고
--- Run 하시면 됩니다. (전부 idempotent — 이미 일부가 적용돼 있어도 안전합니다)
+-- + ai-tools-access.sql + ip-detail-access.sql + 프로젝트 5개 시드
+-- + 최초 관리자 지정까지 한 번에 처리합니다.
+--
+-- ★ 실행 전에 딱 한 곳만 수정하세요 ★
+-- 맨 아래 YOUR_EMAIL_HERE 를 본인 로그인 이메일로 바꾼 다음,
+-- Supabase Dashboard → SQL Editor에 전체를 붙여넣고 Run 하시면 끝입니다.
+-- (전부 idempotent — 이미 일부가 적용돼 있어도 다시 실행해도 안전합니다)
 -- ============================================================
 
 -- ---------- 1. auth-tables.sql ----------
@@ -253,3 +257,14 @@ insert into ip_projects (id, title, genre, stage, logline, sort_order) values
 ('project-d', '(프로젝트 D 제목 작성 예정)', '(장르 미정)', '개발', '(한 줄 로그라인 작성 예정 — 알려주시면 반영할게요)', 4),
 ('project-e', '(프로젝트 E 제목 작성 예정)', '(장르 미정)', '피칭', '(한 줄 로그라인 작성 예정 — 알려주시면 반영할게요)', 5)
 on conflict (id) do nothing;
+
+-- ---------- 6. 최초 관리자 지정 ----------
+-- ↓↓↓ 아래 줄의 YOUR_EMAIL_HERE 를 본인 로그인 이메일로 바꾸세요 ↓↓↓
+
+alter table profiles disable trigger protect_privileged_profile_columns;
+
+update profiles
+set role = 'admin'
+where email = 'YOUR_EMAIL_HERE';
+
+alter table profiles enable trigger protect_privileged_profile_columns;
