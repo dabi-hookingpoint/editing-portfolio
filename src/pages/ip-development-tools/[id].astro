@@ -22,7 +22,6 @@ const { title, genre, stage } = project.data;
 
 		<section class="tools-section">
 			<h2>AI 도구</h2>
-			<p class="hint" id="tools-locked" hidden></p>
 
 			<nav class="tool-tabs">
 				<button type="button" data-tab="record" class="tab-btn active">① 회의 녹음/저장</button>
@@ -91,44 +90,8 @@ const { title, genre, stage } = project.data;
 	checkAccessAndInit();
 
 	async function checkAccessAndInit() {
-		const tabsNav = document.querySelector('.tool-tabs');
-		const panels = document.querySelectorAll('.tool-panel');
-		const lockedEl = document.getElementById('tools-locked');
-
-		const { data: { session } } = await supabase.auth.getSession();
-		if (!session) {
-			showLocked('로그인한 회원만 AI 도구를 사용할 수 있습니다.', true);
-			return;
-		}
-
-		const { data: profile } = await supabase
-			.from('profiles')
-			.select('role, ai_tools_access')
-			.eq('id', session.user.id)
-			.single();
-
-		const allowed = !!profile && (profile.role === 'admin' || profile.ai_tools_access === true);
-		if (!allowed) {
-			showLocked('AI 도구 사용 권한이 없습니다. 관리자에게 권한 부여를 요청해주세요.', false);
-			return;
-		}
-
+		// 로그인 없이 누구나 사용할 수 있도록 열어둔 상태입니다.
 		initTools();
-
-		function showLocked(message, showLoginLink) {
-			(tabsNav as HTMLElement | null)?.style.setProperty('display', 'none');
-			panels.forEach((p) => (p as HTMLElement).style.setProperty('display', 'none'));
-			if (lockedEl) {
-				lockedEl.hidden = false;
-				lockedEl.textContent = message + ' ';
-				if (showLoginLink) {
-					const a = document.createElement('a');
-					a.href = '/login';
-					a.textContent = '로그인하러 가기 →';
-					lockedEl.appendChild(a);
-				}
-			}
-		}
 	}
 
 	function initTools() {

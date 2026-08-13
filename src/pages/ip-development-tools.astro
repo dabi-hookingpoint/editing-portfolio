@@ -10,7 +10,7 @@ const projects = (await getCollection('ipProjects')).sort(
 <Layout title="IP DEVELOPMENT — Hooking Point">
 	<div class="page">
 		<h1>IP DEVELOPMENT</h1>
-		<p class="intro">프로젝트별 AI 제작 도구입니다. 회의 녹음/자동 요약, 시나리오 3막 구조 분석, 레퍼런스 추천, 컨셉 이미지 생성을 프로젝트마다 사용할 수 있습니다. 로그인 후 관리자로부터 권한을 부여받은 회원만 사용 가능합니다.</p>
+		<p class="intro">프로젝트별 AI 제작 도구입니다. 회의 녹음/자동 요약, 시나리오 3막 구조 분석, 레퍼런스 추천, 컨셉 이미지 생성을 프로젝트마다 로그인 없이 바로 사용할 수 있습니다.</p>
 
 		<ul class="ip-grid">
 			{projects.map((p) => (

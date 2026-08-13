@@ -2,7 +2,9 @@
 // 클라이언트가 보낸 Supabase access token을 검증하고 profiles.role/ai_tools_access를 확인합니다.
 // 서비스 롤 키 없이, 사용자 본인 토큰으로 Supabase REST API를 직접 호출합니다.
 //
-const AI_TOOLS_AUTH_ENABLED = true;
+// IP DEVELOPMENT(회의 녹음/자동요약 · 3막 구조 분석 · 레퍼런스 · 컨셉 이미지)는
+// 로그인 없이 누구나 쓸 수 있도록 열어달라는 요청에 따라 검증을 꺼둔 상태입니다.
+const AI_TOOLS_AUTH_ENABLED = false;
 
 export function jsonError(status, message) {
   return new Response(JSON.stringify({ error: message }), {
