@@ -13,16 +13,16 @@ function containsKorean(text) {
 }
 
 async function translateToEnglish(text, aiBinding) {
-  if (!containsKorean(text)) return text;
+  if (!containsKorean(text)) return { text, error: null };
   try {
     const result = await aiBinding.run("@cf/meta/m2m100-1.2b", {
       text,
       source_lang: "korean",
       target_lang: "english",
     });
-    return result?.translated_text || text;
-  } catch {
-    return text;
+    return { text: result?.translated_text || text, error: null };
+  } catch (err) {
+    return { text, error: String((err && err.message) || err) };
   }
 }
 
@@ -41,9 +41,9 @@ async function distillPrompt(rawPrompt, aiBinding) {
       ],
     });
     const text = (result?.response || "").trim();
-    return text || null;
-  } catch {
-    return null;
+    return { text: text || null, error: null };
+  } catch (err) {
+    return { text: null, error: String((err && err.message) || err) };
   }
 }
 
@@ -51,8 +51,9 @@ async function genWorkersAI(prompt, aiBinding) {
   // 1) LLM으로 고객의 서술형 프롬프트를 짧은 영어 키워드 프롬프트로 압축(맥락은 유지).
   // 2) 실패 시에는 번역만 거친 원문을 그대로 사용.
   // 3) flux-1-schnell(초고속·저품질) 대신 SDXL로 생성해 정확도를 높입니다.
-  const distilled = await distillPrompt(prompt, aiBinding);
-  const finalPrompt = distilled || (await translateToEnglish(prompt, aiBinding));
+  const distillResult = await distillPrompt(prompt, aiBinding);
+  const translateResult = distillResult.text ? { text: distillResult.text, error: null } : await translateToEnglish(prompt, aiBinding);
+  const finalPrompt = translateResult.text;
   const output = await aiBinding.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", {
     prompt: finalPrompt,
     num_steps: 20,
@@ -65,6 +66,8 @@ async function genWorkersAI(prompt, aiBinding) {
     url: `data:image/png;base64,${arrayBufferToBase64(arrayBuffer)}`,
     provider: "workers-ai:sdxl",
     finalPrompt,
+    debugDistillError: distillResult.error,
+    debugTranslateError: translateResult.error,
   };
 }
 
