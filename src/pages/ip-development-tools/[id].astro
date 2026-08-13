@@ -149,6 +149,8 @@ const { title, genre, stage } = project.data;
 			if (imHint) {
 				if (data.imageEngine === 'mock') {
 					imHint.textContent = '현재 이미지 생성 엔진이 설정되지 않아 목업(그라디언트) 이미지로 대체됩니다.';
+				} else if (data.imageEngine === 'workers-ai') {
+					imHint.textContent = 'Cloudflare Workers AI(무료)로 실제 이미지를 생성합니다.';
 				} else if (data.imageEngine === 'colab') {
 					imHint.textContent = 'Colab GPU에서 실행 중인 Stable Diffusion으로 이미지를 생성합니다. 노트북이 꺼져 있으면 목업으로 대체됩니다.';
 				} else {

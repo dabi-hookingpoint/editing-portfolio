@@ -8,6 +8,12 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
+async function genWorkersAI(prompt, aiBinding) {
+  const result = await aiBinding.run("@cf/black-forest-labs/flux-1-schnell", { prompt, steps: 4 });
+  if (!result?.image) throw new Error("Cloudflare Workers AI가 이미지를 반환하지 않았습니다.");
+  return { url: `data:image/jpeg;base64,${result.image}`, provider: "workers-ai:flux-1-schnell" };
+}
+
 async function genColab(prompt, endpointUrl, sharedSecret) {
   const base = endpointUrl.replace(/\/$/, "");
   const res = await fetch(`${base}/generate`, {
@@ -104,6 +110,7 @@ function mockImage(prompt) {
 }
 
 export async function generateConceptImage(prompt, env) {
+  const aiBinding = env.AI;
   const colabUrl = env.COLAB_ENDPOINT_URL;
   const colabSecret = env.COLAB_SHARED_SECRET;
   const stabilityKey = env.STABILITY_API_KEY;
@@ -111,6 +118,7 @@ export async function generateConceptImage(prompt, env) {
   const replicateToken = env.REPLICATE_API_TOKEN;
 
   try {
+    if (aiBinding) return await genWorkersAI(prompt, aiBinding);
     if (colabUrl) return await genColab(prompt, colabUrl, colabSecret);
     if (stabilityKey) return await genStability(prompt, stabilityKey);
     if (openaiKey) return await genOpenAI(prompt, openaiKey, env);
