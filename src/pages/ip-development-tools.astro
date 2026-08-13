@@ -1,0 +1,88 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('ipProjects')).sort(
+	(a, b) => (a.data.sortOrder ?? 0) - (b.data.sortOrder ?? 0)
+);
+---
+
+<Layout title="IP DEVELOPMENT — Hooking Point">
+	<div class="page">
+		<h1>IP DEVELOPMENT</h1>
+		<p class="intro">프로젝트별 AI 제작 도구입니다. 회의 녹음/자동 요약, 시나리오 3막 구조 분석, 레퍼런스 추천, 컨셉 이미지 생성을 프로젝트마다 사용할 수 있습니다. 로그인 후 관리자로부터 권한을 부여받은 회원만 사용 가능합니다.</p>
+
+		<ul class="ip-grid">
+			{projects.map((p) => (
+				<li>
+					<a class="ip-card" href={`/ip-development-tools/${p.id}`}>
+						<span class="stage-badge">{p.data.stage}</span>
+						<span class="ip-title">{p.data.title}</span>
+						<span class="ip-genre">{p.data.genre}</span>
+					</a>
+				</li>
+			))}
+		</ul>
+	</div>
+</Layout>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.intro {
+		color: var(--muted);
+		max-width: 40rem;
+		margin: 0 0 2.5rem;
+	}
+
+	.ip-grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1.5rem;
+	}
+	.ip-card {
+		font: inherit;
+		text-align: left;
+		width: 100%;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 1.5rem;
+		cursor: pointer;
+		color: inherit;
+		display: flex;
+		flex-direction: column;
+		box-shadow: var(--shadow);
+		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+	}
+	.ip-card:hover {
+		border-color: var(--accent);
+		box-shadow: var(--shadow-hover);
+		transform: translateY(-2px);
+	}
+	.stage-badge {
+		align-self: flex-start;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		color: var(--heading);
+		border: 1px solid var(--accent);
+		background: var(--accent-dim);
+		border-radius: 999px;
+		padding: 0.2rem 0.6rem;
+		margin-bottom: 0.8rem;
+	}
+	.ip-title {
+		font-weight: 700;
+		color: var(--heading);
+		margin-bottom: 0.2rem;
+	}
+	.ip-genre {
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+</style>
