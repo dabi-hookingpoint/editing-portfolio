@@ -8,8 +8,32 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
+function containsKorean(text) {
+  return /[가-힣]/.test(text);
+}
+
+async function translateToEnglish(text, aiBinding) {
+  if (!containsKorean(text)) return text;
+  try {
+    const result = await aiBinding.run("@cf/meta/m2m100-1.2b", {
+      text,
+      source_lang: "korean",
+      target_lang: "english",
+    });
+    return result?.translated_text || text;
+  } catch {
+    return text;
+  }
+}
+
 async function genWorkersAI(prompt, aiBinding) {
-  const result = await aiBinding.run("@cf/black-forest-labs/flux-1-schnell", { prompt, steps: 4 });
+  // flux-1-schnell은 영어 프롬프트에 최적화되어 있어, 한글 프롬프트는 먼저
+  // 같은 Workers AI의 번역 모델로 영어로 바꿔서 정확도를 높입니다.
+  const translatedPrompt = await translateToEnglish(prompt, aiBinding);
+  const result = await aiBinding.run("@cf/black-forest-labs/flux-1-schnell", {
+    prompt: translatedPrompt,
+    steps: 4,
+  });
   if (!result?.image) throw new Error("Cloudflare Workers AI가 이미지를 반환하지 않았습니다.");
   return { url: `data:image/jpeg;base64,${result.image}`, provider: "workers-ai:flux-1-schnell" };
 }
