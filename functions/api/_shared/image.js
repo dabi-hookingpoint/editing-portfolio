@@ -12,17 +12,32 @@ function containsKorean(text) {
   return /[가-힣]/.test(text);
 }
 
+async function withRetry(fn, attempts = 2) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 400));
+    }
+  }
+  throw lastErr;
+}
+
 async function translateToEnglish(text, aiBinding) {
-  if (!containsKorean(text)) return { text, error: null };
+  if (!containsKorean(text)) return text;
   try {
-    const result = await aiBinding.run("@cf/meta/m2m100-1.2b", {
-      text,
-      source_lang: "korean",
-      target_lang: "english",
-    });
-    return { text: result?.translated_text || text, error: null };
-  } catch (err) {
-    return { text, error: String((err && err.message) || err) };
+    const result = await withRetry(() =>
+      aiBinding.run("@cf/meta/m2m100-1.2b", {
+        text,
+        source_lang: "korean",
+        target_lang: "english",
+      })
+    );
+    return result?.translated_text || text;
+  } catch {
+    return text;
   }
 }
 
@@ -30,20 +45,22 @@ async function translateToEnglish(text, aiBinding) {
 // 짧은 영어 키워드 나열형 프롬프트로 압축합니다. 실패하면 번역만 거친 원문으로 대체합니다.
 async function distillPrompt(rawPrompt, aiBinding) {
   try {
-    const result = await aiBinding.run("@cf/meta/llama-3.1-8b-instruct", {
-      messages: [
-        {
-          role: "system",
-          content:
-            "You rewrite a film scene description (it may be written in Korean, as a long sentence) into a concise prompt for a text-to-image diffusion model. Read it carefully and keep every concrete visual detail it implies (era, place, subject, action, camera angle/lens, lighting, mood, color). Output ONLY a comma-separated list of short English visual keywords, 15-25 words total. No full sentences, no explanation, no quotes, no preamble.",
-        },
-        { role: "user", content: rawPrompt },
-      ],
-    });
+    const result = await withRetry(() =>
+      aiBinding.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+        messages: [
+          {
+            role: "system",
+            content:
+              "You rewrite a film scene description (it may be written in Korean, as a long sentence) into a concise prompt for a text-to-image diffusion model. Read it carefully and keep every concrete visual detail it implies (era, place, subject, action, camera angle/lens, lighting, mood, color). Output ONLY a comma-separated list of short English visual keywords, 15-25 words total. No full sentences, no explanation, no quotes, no preamble.",
+          },
+          { role: "user", content: rawPrompt },
+        ],
+      })
+    );
     const text = (result?.response || "").trim();
-    return { text: text || null, error: null };
-  } catch (err) {
-    return { text: null, error: String((err && err.message) || err) };
+    return text || null;
+  } catch {
+    return null;
   }
 }
 
@@ -51,9 +68,8 @@ async function genWorkersAI(prompt, aiBinding) {
   // 1) LLM으로 고객의 서술형 프롬프트를 짧은 영어 키워드 프롬프트로 압축(맥락은 유지).
   // 2) 실패 시에는 번역만 거친 원문을 그대로 사용.
   // 3) flux-1-schnell(초고속·저품질) 대신 SDXL로 생성해 정확도를 높입니다.
-  const distillResult = await distillPrompt(prompt, aiBinding);
-  const translateResult = distillResult.text ? { text: distillResult.text, error: null } : await translateToEnglish(prompt, aiBinding);
-  const finalPrompt = translateResult.text;
+  const distilled = await distillPrompt(prompt, aiBinding);
+  const finalPrompt = distilled || (await translateToEnglish(prompt, aiBinding));
   const output = await aiBinding.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", {
     prompt: finalPrompt,
     num_steps: 20,
@@ -66,8 +82,6 @@ async function genWorkersAI(prompt, aiBinding) {
     url: `data:image/png;base64,${arrayBufferToBase64(arrayBuffer)}`,
     provider: "workers-ai:sdxl",
     finalPrompt,
-    debugDistillError: distillResult.error,
-    debugTranslateError: translateResult.error,
   };
 }
 
