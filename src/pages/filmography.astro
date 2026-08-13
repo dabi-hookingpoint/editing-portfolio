@@ -7,9 +7,16 @@ const types = ['전체', ...new Set(works.map((w) => w.data.type))];
 ---
 
 <Layout title="EDITING / WORKS — Hooking Point">
+	<div class="hero-band">
+		<span class="blob blob-1" aria-hidden="true"></span>
+		<span class="blob blob-2" aria-hidden="true"></span>
+		<div class="hero-band-inner">
+			<h1>EDITING · WORKS</h1>
+		</div>
+	</div>
+
 	<div class="page">
 		<a class="back-link" href="/">← 홈으로</a>
-		<h1>EDITING / WORKS</h1>
 
 		<div class="filters" role="tablist">
 			{types.map((t, i) => (
@@ -53,34 +60,77 @@ const types = ['전체', ...new Set(works.map((w) => w.data.type))];
 </script>
 
 <style>
-	h1 {
-		margin-bottom: 2rem;
+	.hero-band {
+		position: relative;
+		overflow: hidden;
+		background: linear-gradient(135deg, #0f2fa8, var(--accent) 60%, #2e64f2);
+		padding: 3.5rem 2rem 3rem;
+		margin-bottom: 2.5rem;
 	}
+	.hero-band-inner {
+		position: relative;
+		z-index: 1;
+		max-width: 1100px;
+		margin-inline: auto;
+	}
+	.hero-band h1 {
+		margin: 0;
+		font-size: 2.6rem;
+		color: #fff;
+	}
+	.blob {
+		position: absolute;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.08);
+		filter: blur(2px);
+	}
+	.blob-1 {
+		width: 320px;
+		height: 320px;
+		top: -140px;
+		right: 8%;
+	}
+	.blob-2 {
+		width: 220px;
+		height: 220px;
+		bottom: -140px;
+		right: 22%;
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.back-link {
+		display: inline-block;
+		margin-bottom: 1.5rem;
+		color: var(--muted);
+		transition: color 0.15s ease;
+	}
+	.back-link:hover {
+		color: var(--fg);
+	}
+
 	.filters {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.6rem;
-		margin-bottom: 2rem;
+		gap: 1.5rem;
+		margin-bottom: 2.5rem;
 	}
 	.filter {
 		font: inherit;
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		font-weight: 600;
 		background: none;
-		border: 1px solid var(--border);
+		border: none;
 		color: var(--muted);
 		border-radius: 999px;
 		padding: 0.5rem 1.1rem;
 		cursor: pointer;
-		transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+		transition: color 0.15s ease, background-color 0.15s ease;
 	}
 	.filter:hover {
-		border-color: var(--accent);
 		color: var(--heading);
 	}
 	.filter[aria-pressed='true'] {
-		background: var(--accent);
-		border-color: var(--accent);
+		background: var(--surface-strong);
 		color: var(--heading);
 	}
 
@@ -90,19 +140,12 @@ const types = ['전체', ...new Set(works.map((w) => w.data.type))];
 		margin: 0;
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-		gap: 1.5rem;
+		gap: 2rem 1.5rem;
 	}
 	.work-card {
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		overflow: hidden;
-		box-shadow: var(--shadow);
-		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+		transition: transform 0.15s ease;
 	}
 	.work-card:hover {
-		border-color: var(--accent);
-		box-shadow: var(--shadow-hover);
 		transform: translateY(-2px);
 	}
 	.work-card a {
@@ -112,14 +155,15 @@ const types = ['전체', ...new Set(works.map((w) => w.data.type))];
 		width: 100%;
 		aspect-ratio: 2 / 3;
 		object-fit: cover;
+		border-radius: 8px;
 		background: var(--border);
 		display: block;
 	}
 	.work-meta {
-		padding: 1rem;
+		padding: 0.8rem 0.1rem 0;
 	}
 	.work-meta h2 {
-		margin: 0 0 0.3rem;
+		margin: 0 0 0.2rem;
 		font-size: 1rem;
 	}
 	.work-meta .year {
