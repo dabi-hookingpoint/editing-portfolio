@@ -93,7 +93,7 @@ const {
 				<p>{cast.join(', ')}</p>
 			</section>
 
-			<a class="editing-link" href={`/works/${id}/editing`}>편집 상세 보기 →</a>
+			<a class="editing-link" href={`/works/${id}/editing`}>편집 로그 보기 →</a>
 		</div>
 	</div>
 
@@ -184,9 +184,21 @@ const {
 	}
 
 	.editing-link {
-		display: inline-block;
-		margin-top: 0.5rem;
-		text-decoration: underline;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 1.5rem;
+		padding: 0.75rem 1.3rem;
+		border-radius: 6px;
+		background: var(--accent);
 		color: var(--heading);
+		font-weight: 700;
+		font-size: 0.95rem;
+		text-decoration: none;
+		transition: background-color 0.15s ease, transform 0.15s ease;
+	}
+	.editing-link:hover {
+		background: #1440b8;
+		transform: translateY(-1px);
 	}
 </style>
