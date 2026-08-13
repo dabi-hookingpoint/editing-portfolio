@@ -24,6 +24,11 @@ const ipProjectSchema = z.object({
   genre: z.string(),
   stage: z.string(),
   logline: z.string(),
+  mainWriter: z.string().optional(),
+  year: z.number().optional(),
+  award: z.string().optional(),
+  concept: z.string().optional(),
+  material: z.string().optional(),
   sortOrder: z.number().optional(),
 });
 
@@ -89,6 +94,11 @@ const ipProjects = defineCollection({
       genre: row.genre,
       stage: row.stage,
       logline: row.logline,
+      mainWriter: row.main_writer ?? undefined,
+      year: row.year ?? undefined,
+      award: row.award ?? undefined,
+      concept: row.concept ?? undefined,
+      material: row.material ?? undefined,
       sortOrder: row.sort_order,
     }));
   },

@@ -5,21 +5,47 @@ import { getCollection } from 'astro:content';
 const projects = (await getCollection('ipProjects')).sort(
 	(a, b) => (a.data.sortOrder ?? 0) - (b.data.sortOrder ?? 0)
 );
+
+const icons = {
+	person: '<circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1.2-3.2 4-4.8 7-4.8s5.8 1.6 7 4.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+	tag: '<path d="M11 4h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8A1 1 0 0 1 11 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="15" cy="9" r="1.1" fill="currentColor"/>',
+	clock: '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+	trophy: '<path d="M7 4h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 5H4v1a4 4 0 0 0 4 4M17 5h3v1a4 4 0 0 1-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 12v3M9 19h6M10 19v-2.5a2 2 0 0 1 2-2 2 2 0 0 1 2 2V19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+	bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .9 1.6h5.2c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+	layers: '<path d="M12 4 3 8.5 12 13l9-4.5L12 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 13l9 4.5 9-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+};
+
+const fields = [
+	{ key: 'mainWriter', label: '메인작가', icon: 'person' },
+	{ key: 'stage', label: '구분', icon: 'tag' },
+	{ key: 'year', label: '년도', icon: 'clock' },
+	{ key: 'award', label: '수상', icon: 'trophy' },
+	{ key: 'concept', label: '컨셉', icon: 'bulb' },
+	{ key: 'material', label: '소재', icon: 'layers' },
+];
 ---
 
 <Layout title="IP Development — Hooking Point">
 	<div class="page">
 		<h1>IP DEVELOPMENT</h1>
-		<p class="intro">현재 개발 중인 오리지널 IP입니다. 상세 시놉시스는 로그인 후 확인 가능하며, 각 프로젝트 안에 회의 녹음·구조 분석·컨셉 이미지 AI 도구가 함께 들어있습니다.</p>
+		<p class="intro">현재 개발 중인 오리지널 IP입니다. 시놉시스·기획의도·주요 이미지 등 상세정보는 관리자로부터 열람 권한을 부여받은 회원만 확인할 수 있습니다. 궁금하신 작품이 있다면 <a href="mailto:hooking.point@gmail.com">hooking.point@gmail.com</a>으로 열람 요청 주세요.</p>
 
 		<ul class="ip-grid">
 			{projects.map((p) => (
 				<li>
 					<a class="ip-card" href={`/ip-development/${p.id}`}>
-						<span class="poster-placeholder" aria-hidden="true"></span>
-						<span class="stage-badge">{p.data.stage}</span>
+						<span class="ip-genre">[{p.data.genre}]</span>
 						<span class="ip-title">{p.data.title}</span>
-						<span class="ip-genre">{p.data.genre}</span>
+						<ul class="ip-fields">
+							{fields.map((f) => (
+								<li>
+									<span class="field-icon" set:html={`<svg viewBox="0 0 24 24" width="16" height="16">${icons[f.icon]}</svg>`} />
+									<span class="field-label">{f.label}</span>
+									<span class="field-sep">:</span>
+									<span class="field-value">{p.data[f.key] ?? '-'}</span>
+								</li>
+							))}
+						</ul>
 					</a>
 				</li>
 			))}
@@ -42,18 +68,18 @@ const projects = (await getCollection('ipProjects')).sort(
 		margin: 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 		gap: 1.5rem;
 	}
 	.ip-card {
 		font: inherit;
 		text-align: left;
 		width: 100%;
+		height: 100%;
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 10px;
-		padding: 0;
-		overflow: hidden;
+		padding: 1.5rem;
 		cursor: pointer;
 		color: inherit;
 		display: flex;
@@ -66,31 +92,55 @@ const projects = (await getCollection('ipProjects')).sort(
 		box-shadow: var(--shadow-hover);
 		transform: translateY(-2px);
 	}
-	.poster-placeholder {
+	.ip-genre {
 		display: block;
-		aspect-ratio: 2 / 3;
-		background: linear-gradient(160deg, var(--border), var(--bg));
-	}
-	.stage-badge {
-		align-self: flex-start;
-		margin: 1rem 1rem 0;
-		font-size: 0.7rem;
+		font-size: 0.8rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
-		color: var(--heading);
-		border: 1px solid var(--accent);
-		background: var(--accent-dim);
-		border-radius: 999px;
-		padding: 0.2rem 0.6rem;
+		color: var(--accent);
+		margin-bottom: 0.5rem;
 	}
 	.ip-title {
-		margin: 0.8rem 1rem 0.2rem;
+		display: block;
+		font-size: 1.2rem;
 		font-weight: 700;
 		color: var(--heading);
+		margin-bottom: 1.1rem;
 	}
-	.ip-genre {
-		margin: 0 1rem 1rem;
+	.ip-fields {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 0.55rem;
+	}
+	.ip-fields li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		font-size: 0.85rem;
+	}
+	.field-icon {
+		display: inline-flex;
+		flex-shrink: 0;
+		width: 22px;
+		height: 22px;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		background: var(--accent-dim);
+		color: var(--accent);
+	}
+	.field-label {
 		color: var(--muted);
+		flex-shrink: 0;
+	}
+	.field-sep {
+		color: var(--muted);
+	}
+	.field-value {
+		color: var(--fg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 </style>

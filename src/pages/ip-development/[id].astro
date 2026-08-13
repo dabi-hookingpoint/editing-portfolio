@@ -9,28 +9,43 @@ export async function getStaticPaths() {
 
 const { id } = Astro.params;
 const project = await getEntry('ipProjects', id);
-const { title, genre, stage, logline } = project.data;
+const { title, genre, stage, logline, mainWriter, year, award, concept, material } = project.data;
+
+const infoFields = [
+	{ label: '메인작가', value: mainWriter },
+	{ label: '구분', value: stage },
+	{ label: '년도', value: year },
+	{ label: '수상', value: award },
+	{ label: '컨셉', value: concept },
+	{ label: '소재', value: material },
+];
 ---
 
 <Layout title={`${title} — IP Development — Hooking Point`}>
 	<div class="page" data-project-id={id} data-project-title={title}>
 		<a class="back-link" href="/ip-development">← IP DEVELOPMENT 목록으로</a>
 
-		<span class="stage-badge">{stage}</span>
+		<span class="ip-genre">[{genre}]</span>
 		<h1>{title}</h1>
-		<p class="ip-genre">{genre}</p>
 		<p class="logline">{logline}</p>
 
+		<div class="info-block">
+			<h2>IP 작품정보</h2>
+			<ul class="info-fields">
+				{infoFields.map((f) => (
+					<li><span class="field-label">{f.label}</span><span class="field-value">{f.value ?? '-'}</span></li>
+				))}
+			</ul>
+		</div>
+
 		<div class="synopsis-block">
-			<h2>상세 시놉시스</h2>
-			<p id="detail-synopsis">확인 중…</p>
-			<p class="hint" id="synopsis-login-hint" hidden>로그인한 회원만 열람할 수 있습니다. <a href="/login">로그인하러 가기 →</a></p>
-			<a id="request-link" class="request-btn" href="#">자료 요청 →</a>
+			<h2>상세정보</h2>
+			<div id="detail-protected">확인 중…</div>
 		</div>
 
 		<section class="tools-section">
 			<h2>AI 도구</h2>
-			<div class="badges" id="status-badges"></div>
+			<p class="hint" id="tools-locked" hidden></p>
 
 			<nav class="tool-tabs">
 				<button type="button" data-tab="record" class="tab-btn active">① 회의 녹음/저장</button>
@@ -42,20 +57,16 @@ const { title, genre, stage, logline } = project.data;
 				<div class="tool-card">
 					<div class="form-row">
 						<div class="field"><label>감독/상대</label><input type="text" id="rec-director" placeholder="예: OO 감독" /></div>
+						<div class="field"><label>회의 날짜</label><input type="date" id="rec-date" /></div>
 					</div>
 					<div class="form-actions">
 						<button type="button" class="rec-toggle-btn" id="rec-toggle">● 녹음 시작</button>
 						<button type="button" class="cancel-btn" id="rec-clear">지우기</button>
 					</div>
-					<div class="form-actions speaker-row">
-						<span class="hint">발화자 태깅 (수동):</span>
-						<button type="button" class="speaker-btn active" data-speaker="A" id="speaker-a">화자 A</button>
-						<button type="button" class="speaker-btn" data-speaker="B" id="speaker-b">화자 B</button>
-					</div>
-					<textarea id="rec-text" rows="6" placeholder="녹음 시작 후 말하면 여기에 실시간으로 텍스트가 쌓입니다. 위 화자 버튼을 눌러 발화자가 바뀔 때마다 전환해주세요. 브라우저 음성인식(Web Speech API)을 사용하며 별도 STT API 키가 필요 없습니다. 직접 타이핑해서 수정해도 됩니다."></textarea>
+					<textarea id="rec-text" rows="6" placeholder="녹음을 시작하고 중지하면 자동으로 화자(A, B…)를 구분해 여기에 텍스트가 채워집니다. 직접 타이핑해서 수정해도 됩니다."></textarea>
 					<p class="hint" id="rec-hint">크롬(Chrome) 브라우저에서만 지원됩니다. 마이크 권한을 허용해주세요.</p>
 					<div class="form-actions">
-						<button type="button" class="save-btn" id="rec-save">이 내용 저장</button>
+						<button type="button" class="save-btn" id="rec-save">이 내용 저장 (저장 시 AI 요약 자동 생성)</button>
 					</div>
 				</div>
 				<div class="tool-card">
@@ -99,39 +110,114 @@ const { title, genre, stage, logline } = project.data;
 	const projectId = page.dataset.projectId!;
 	const projectTitle = page.dataset.projectTitle!;
 
-	const synopsisEl = document.getElementById('detail-synopsis');
-	const loginHint = document.getElementById('synopsis-login-hint');
-	const requestLink = document.getElementById('request-link') as HTMLAnchorElement;
+	const protectedEl = document.getElementById('detail-protected');
 
-	requestLink.href = `mailto:hooking.point@gmail.com?subject=${encodeURIComponent(`[${projectTitle}] 자료 요청`)}`;
+	function escapeHtml(s: string) {
+		return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } as Record<string, string>)[c]);
+	}
 
-	async function loadSynopsis() {
+	function withLineBreaks(s: string) {
+		return escapeHtml(s).replace(/\n/g, '<br />');
+	}
+
+	function requestAccessHtml(message: string) {
+		const mailto = `mailto:hooking.point@gmail.com?subject=${encodeURIComponent(`[${projectTitle}] 열람 요청`)}`;
+		return `<p class="hint">${message} 해당 작품에 대해 더 알고 싶은 분은 <a href="${mailto}">hooking.point@gmail.com</a>로 열람 요청 주세요.</p>`;
+	}
+
+	async function loadProtectedDetail() {
+		if (!protectedEl) return;
+
 		const { data: { session } } = await supabase.auth.getSession();
 		if (!session) {
-			if (synopsisEl) synopsisEl.textContent = '';
-			loginHint?.removeAttribute('hidden');
+			protectedEl.innerHTML = requestAccessHtml('로그인한 회원 중 관리자로부터 열람 권한을 부여받은 분만 확인할 수 있습니다.');
 			return;
 		}
+
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role, ip_access')
+			.eq('id', session.user.id)
+			.single();
+
+		const allowed = !!profile && (profile.role === 'admin' || profile.ip_access === true);
+		if (!allowed) {
+			protectedEl.innerHTML = requestAccessHtml('열람 권한이 없습니다.');
+			return;
+		}
+
 		const { data, error } = await supabase
 			.from('ip_project_synopses')
-			.select('synopsis')
+			.select('synopsis, planning_intent, key_images')
 			.eq('project_id', projectId)
 			.maybeSingle();
-		if (synopsisEl) {
-			synopsisEl.textContent = error || !data ? '아직 등록된 상세 시놉시스가 없습니다.' : data.synopsis;
+
+		if (error || !data) {
+			protectedEl.innerHTML = `<p class="hint">아직 등록된 상세정보가 없습니다.</p>`;
+			return;
 		}
+
+		const images: string[] = Array.isArray(data.key_images) ? data.key_images : [];
+
+		protectedEl.innerHTML = `
+			<div class="detail-section"><h3>시놉시스</h3><p>${data.synopsis ? withLineBreaks(data.synopsis) : '(작성 예정)'}</p></div>
+			<div class="detail-section"><h3>기획의도</h3><p>${data.planning_intent ? withLineBreaks(data.planning_intent) : '(작성 예정)'}</p></div>
+			${images.length ? `<div class="detail-section"><h3>주요 이미지</h3><div class="key-images">${images.map((src) => `<img src="${escapeHtml(src)}" alt="" loading="lazy" />`).join('')}</div></div>` : ''}
+		`;
 	}
-	loadSynopsis();
+	loadProtectedDetail();
 </script>
 
-<script define:vars={{ projectId: id }}>
-	// TEMP: 회원가입/로그인이 정상화되기 전까지 AI 도구는 로그인 없이 사용 가능합니다.
-	// 로그인 시스템이 정상화되면: 아래 로컬스토리지 기반 저장 로직을 supabase.from('pd_meeting_transcripts')
-	// (project_id 컬럼 추가 필요) 호출로 바꾸고, functions/api/_shared/auth.js의 AI_TOOLS_AUTH_ENABLED를 true로 되돌리세요.
+<script>
+	import { supabase } from '../../lib/supabase';
 
+	// 로컬스토리지 기반 회의 기록 저장은 유지 중입니다(추후 pd_meeting_transcripts 테이블로 전환 예정).
+
+	const projectId = (document.querySelector('.page') as HTMLElement).dataset.projectId!;
 	const LOCAL_TRANSCRIPTS_KEY = `pd_meeting_transcripts_${projectId}`;
 
-	initTools();
+	checkAccessAndInit();
+
+	async function checkAccessAndInit() {
+		const tabsNav = document.querySelector('.tool-tabs');
+		const panels = document.querySelectorAll('.tool-panel');
+		const lockedEl = document.getElementById('tools-locked');
+
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session) {
+			showLocked('로그인한 회원만 AI 도구를 사용할 수 있습니다.', true);
+			return;
+		}
+
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role, ai_tools_access')
+			.eq('id', session.user.id)
+			.single();
+
+		const allowed = !!profile && (profile.role === 'admin' || profile.ai_tools_access === true);
+		if (!allowed) {
+			showLocked('AI 도구 사용 권한이 없습니다. 관리자에게 권한 부여를 요청해주세요.', false);
+			return;
+		}
+
+		initTools();
+
+		function showLocked(message, showLoginLink) {
+			(tabsNav as HTMLElement | null)?.style.setProperty('display', 'none');
+			panels.forEach((p) => (p as HTMLElement).style.setProperty('display', 'none'));
+			if (lockedEl) {
+				lockedEl.hidden = false;
+				lockedEl.textContent = message + ' ';
+				if (showLoginLink) {
+					const a = document.createElement('a');
+					a.href = '/login';
+					a.textContent = '로그인하러 가기 →';
+					lockedEl.appendChild(a);
+				}
+			}
+		}
+	}
 
 	function initTools() {
 		initTabs();
@@ -161,10 +247,17 @@ const { title, genre, stage, logline } = project.data;
 		});
 	}
 
+	async function authHeaders() {
+		const { data: { session } } = await supabase.auth.getSession();
+		const headers = { 'content-type': 'application/json' };
+		if (session?.access_token) headers.authorization = `Bearer ${session.access_token}`;
+		return headers;
+	}
+
 	async function apiCall(path, body) {
 		const res = await fetch(path, {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: await authHeaders(),
 			body: JSON.stringify(body),
 		});
 		const data = await res.json();
@@ -173,16 +266,10 @@ const { title, genre, stage, logline } = project.data;
 	}
 
 	async function initStatusBadges() {
-		const box = document.getElementById('status-badges');
 		try {
-			const res = await fetch('/api/status');
+			const res = await fetch('/api/status', { headers: await authHeaders() });
 			const data = await res.json();
 			if (!res.ok) throw new Error(data?.error || `요청 실패 (${res.status})`);
-			if (box) {
-				box.innerHTML = `
-					<span class="badge">텍스트 분석 엔진: ${data.textEngine}</span>
-					<span class="badge">이미지 생성 엔진: ${data.imageEngine}</span>`;
-			}
 			const imHint = document.getElementById('im-hint');
 			if (imHint) {
 				if (data.imageEngine === 'mock') {
@@ -203,95 +290,90 @@ const { title, genre, stage, logline } = project.data;
 		const recText = document.getElementById('rec-text');
 		const recToggle = document.getElementById('rec-toggle');
 		const recHint = document.getElementById('rec-hint');
-		const speakerButtons = document.querySelectorAll('.speaker-btn');
 
-		let currentSpeaker = 'A';
-		let lastSpeakerWritten = null;
+		let mediaRecorder = null;
+		let mediaStream = null;
+		let chunks = [];
+		let recording = false;
 
-		speakerButtons.forEach((btn) => {
-			btn.addEventListener('click', () => {
-				currentSpeaker = btn.dataset.speaker;
-				speakerButtons.forEach((b) => b.classList.toggle('active', b === btn));
-			});
-		});
+		const canRecord = !!(navigator.mediaDevices && window.MediaRecorder);
+		if (!canRecord) {
+			recToggle.disabled = true;
+			if (recHint) recHint.textContent = '이 브라우저는 오디오 녹음을 지원하지 않습니다. 크롬(Chrome)에서 열어주세요. 직접 타이핑은 가능합니다.';
+		}
 
-		let recognition = null;
-		let recognizing = false;
-		let baseText = '';
+		async function startRecording() {
+			mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+			mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
+			chunks = [];
+			mediaRecorder.ondataavailable = (e) => {
+				if (e.data.size > 0) chunks.push(e.data);
+			};
+			mediaRecorder.onstop = () => {
+				mediaStream?.getTracks().forEach((t) => t.stop());
+				transcribeRecording(new Blob(chunks, { type: mimeType }));
+			};
+			mediaRecorder.start();
+		}
 
-		const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-		function appendFinal(text) {
-			if (currentSpeaker !== lastSpeakerWritten) {
-				baseText += (baseText ? '\n\n' : '') + `[화자 ${currentSpeaker}] ` + text;
-				lastSpeakerWritten = currentSpeaker;
-			} else {
-				baseText += ' ' + text;
+		async function transcribeRecording(blob) {
+			recToggle.disabled = true;
+			if (recHint) recHint.textContent = '음성을 분석해 화자를 자동으로 구분하는 중입니다...';
+			try {
+				const headers = await authHeaders();
+				const res = await fetch('/api/transcribe', {
+					method: 'POST',
+					headers: { ...headers, 'content-type': blob.type },
+					body: blob,
+				});
+				const data = await res.json();
+				if (!res.ok) throw new Error(data?.error || `요청 실패 (${res.status})`);
+				const formatted = (data.utterances || []).map((u) => `[화자 ${u.speaker}] ${u.text}`).join('\n\n');
+				recText.value = recText.value.trim() ? `${recText.value.trim()}\n\n${formatted}` : formatted;
+				const speakerCount = new Set((data.utterances || []).map((u) => u.speaker)).size;
+				if (recHint) recHint.textContent = speakerCount ? `화자 ${speakerCount}명을 자동으로 구분했습니다. 필요하면 직접 수정하세요.` : '녹음이 중지되었습니다.';
+			} catch (err) {
+				if (recHint) recHint.textContent = `자동 화자 구분 실패: ${err.message}`;
+			} finally {
+				recToggle.disabled = false;
 			}
 		}
 
-		if (!SpeechRecognitionImpl) {
-			recToggle.disabled = true;
-			if (recHint) recHint.textContent = '이 브라우저는 음성인식(Web Speech API)을 지원하지 않습니다. 크롬(Chrome)에서 열어주세요. 직접 타이핑은 가능합니다.';
-		} else {
-			recognition = new SpeechRecognitionImpl();
-			recognition.lang = 'ko-KR';
-			recognition.continuous = true;
-			recognition.interimResults = true;
-
-			recognition.onresult = (event) => {
-				let finalChunk = '';
-				let interimChunk = '';
-				for (let i = event.resultIndex; i < event.results.length; i++) {
-					const transcript = event.results[i][0].transcript;
-					if (event.results[i].isFinal) finalChunk += transcript;
-					else interimChunk += transcript;
+		recToggle.addEventListener('click', async () => {
+			if (!recording) {
+				try {
+					await startRecording();
+				} catch (err) {
+					if (recHint) recHint.textContent = `마이크 접근 실패: ${err.message}`;
+					return;
 				}
-				if (finalChunk) appendFinal(finalChunk.trim());
-				recText.value = baseText + (interimChunk ? ` [${interimChunk}]` : '');
-			};
-			recognition.onerror = (e) => {
-				if (recHint) recHint.textContent = `음성인식 오류: ${e.error}. 마이크 권한을 확인해주세요.`;
-			};
-			recognition.onend = () => {
-				if (recognizing) recognition.start();
-			};
-		}
-
-		recToggle.addEventListener('click', () => {
-			if (!recognition) return;
-			if (!recognizing) {
-				baseText = recText.value;
-				lastSpeakerWritten = null;
-				recognizing = true;
-				recognition.start();
+				recording = true;
 				recToggle.textContent = '■ 녹음 중지';
 				recToggle.classList.add('on');
-				if (recHint) recHint.textContent = '듣고 있습니다... 발화자가 바뀌면 위 버튼을 눌러 전환해주세요.';
+				if (recHint) recHint.textContent = '녹음 중입니다...';
 			} else {
-				recognizing = false;
-				recognition.stop();
+				recording = false;
 				recToggle.textContent = '● 녹음 시작';
 				recToggle.classList.remove('on');
-				if (recHint) recHint.textContent = '녹음이 중지되었습니다.';
+				mediaRecorder?.stop();
 			}
 		});
 
 		document.getElementById('rec-clear')?.addEventListener('click', () => {
-			baseText = '';
-			lastSpeakerWritten = null;
 			recText.value = '';
 		});
 
-		document.getElementById('rec-save')?.addEventListener('click', () => {
+		document.getElementById('rec-save')?.addEventListener('click', async () => {
 			const text = recText.value.trim();
 			if (!text) return;
 			const director = document.getElementById('rec-director').value || '미지정';
-			saveTranscriptLocal({ director, content: text, char_count: text.length });
+			const date = document.getElementById('rec-date').value || '';
+			const record = saveTranscriptLocal({ director, date, content: text, char_count: text.length });
 			recText.value = '';
-			baseText = '';
-			lastSpeakerWritten = null;
-			loadTranscripts();
+			document.getElementById('rec-date').value = '';
+			await loadTranscripts();
+			document.querySelector(`.summarize-btn[data-id="${record.id}"]`)?.click();
 		});
 	}
 
@@ -305,12 +387,14 @@ const { title, genre, stage, logline } = project.data;
 
 	function saveTranscriptLocal(entry) {
 		const records = readTranscriptsLocal();
-		records.push({
+		const record = {
 			id: `local_${Date.now()}_${Math.floor(Math.random() * 1e6)}`,
 			created_at: new Date().toISOString(),
 			...entry,
-		});
+		};
+		records.push(record);
 		localStorage.setItem(LOCAL_TRANSCRIPTS_KEY, JSON.stringify(records));
+		return record;
 	}
 
 	function deleteTranscriptLocal(id) {
@@ -332,7 +416,7 @@ const { title, genre, stage, logline } = project.data;
 			<div class="list-item" data-id="${r.id}">
 				<span class="item-title">
 					${r.director}
-					<small class="item-meta">${new Date(r.created_at).toLocaleString('ko-KR')} · ${r.char_count}자</small>
+					<small class="item-meta">${r.date ? `회의일 ${r.date} · ` : ''}저장 ${new Date(r.created_at).toLocaleString('ko-KR')} · ${r.char_count}자</small>
 					<span class="item-text">${escapeHtml(r.content).slice(0, 200)}${r.content.length > 200 ? '…' : ''}</span>
 					<span class="item-summary" id="summary-${r.id}" hidden></span>
 				</span>
@@ -492,34 +576,29 @@ const { title, genre, stage, logline } = project.data;
 		margin: 0.6rem 0 0.3rem;
 	}
 	.ip-genre {
-		color: var(--muted);
-		margin: 0 0 1rem;
+		display: block;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--accent);
+		margin: 0 0 0.3rem;
 	}
 	.logline {
 		line-height: 1.6;
 		max-width: 40rem;
-		margin: 0 0 2rem;
-	}
-	.stage-badge {
-		display: inline-block;
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.05em;
-		color: var(--heading);
-		border: 1px solid var(--accent);
-		background: var(--accent-dim);
-		border-radius: 999px;
-		padding: 0.2rem 0.6rem;
+		margin: 0 0 1.5rem;
+		color: var(--muted);
 	}
 
+	.info-block,
 	.synopsis-block {
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		padding: 1.5rem;
-		margin-bottom: 2.5rem;
+		margin-bottom: 1.5rem;
 		box-shadow: var(--shadow);
 	}
+	.info-block h2,
 	.synopsis-block h2 {
 		margin-top: 0;
 		font-size: 1.05rem;
@@ -527,33 +606,54 @@ const { title, genre, stage, logline } = project.data;
 	.synopsis-block p {
 		line-height: 1.6;
 	}
-	.request-btn {
-		display: inline-block;
-		border: 1px solid var(--heading);
-		background: none;
-		color: var(--heading);
-		border-radius: 4px;
-		padding: 0.7rem 1.2rem;
-		font-weight: 600;
-		margin-top: 1rem;
-		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	.info-fields {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 0.6rem 1.5rem;
 	}
-	.request-btn:hover {
-		background: var(--accent);
-		border-color: var(--accent);
+	.info-fields li {
+		display: flex;
+		gap: 0.5rem;
+		font-size: 0.9rem;
+	}
+	.info-fields .field-label {
+		color: var(--muted);
+		flex-shrink: 0;
+	}
+	.info-fields .field-value {
+		color: var(--fg);
+	}
+	.detail-section {
+		margin-bottom: 1.5rem;
+	}
+	.detail-section:last-child {
+		margin-bottom: 0;
+	}
+	.detail-section h3 {
+		font-size: 0.95rem;
 		color: var(--heading);
+		margin: 0 0 0.5rem;
+	}
+	.key-images {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		gap: 0.75rem;
+	}
+	.key-images img {
+		width: 100%;
+		height: auto;
+		border-radius: 8px;
+		border: 1px solid var(--border);
+		display: block;
 	}
 
 	.tools-section h2 {
 		font-size: 1.2rem;
 	}
 
-	.badges {
-		margin-bottom: 1rem;
-		display: flex;
-		gap: 0.5rem;
-		flex-wrap: wrap;
-	}
 	.badge {
 		display: inline-block;
 		font-size: 0.75rem;
@@ -658,25 +758,6 @@ const { title, genre, stage, logline } = project.data;
 		flex-wrap: wrap;
 		align-items: center;
 		margin: 1rem 0;
-	}
-	.speaker-row .hint {
-		margin-right: 0.2rem;
-	}
-	.speaker-btn {
-		font: inherit;
-		padding: 0.4rem 0.9rem;
-		border: 1px solid var(--border);
-		border-radius: 999px;
-		background: none;
-		color: var(--muted);
-		cursor: pointer;
-		font-size: 0.85rem;
-	}
-	.speaker-btn.active {
-		border-color: var(--accent);
-		background: var(--accent-dim);
-		color: var(--heading);
-		font-weight: 700;
 	}
 	.save-btn {
 		font: inherit;

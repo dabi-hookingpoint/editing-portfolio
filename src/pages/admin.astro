@@ -84,11 +84,22 @@ import Layout from '../layouts/Layout.astro';
 							<div class="field"><label>장르</label><input name="genre" required /></div>
 						</div>
 						<div class="form-row">
-							<div class="field"><label>단계</label><select name="stage"><option>기획</option><option>트리트먼트</option><option>대본</option><option>개발</option><option>피칭</option></select></div>
+							<div class="field"><label>단계(구분)</label><select name="stage"><option>기획</option><option>트리트먼트</option><option>대본</option><option>개발</option><option>피칭</option></select></div>
 							<div class="field"><label>정렬 순서</label><input name="sortOrder" type="number" required /></div>
 						</div>
+						<div class="form-row">
+							<div class="field"><label>메인작가</label><input name="mainWriter" /></div>
+							<div class="field"><label>년도</label><input name="year" type="number" /></div>
+						</div>
+						<div class="form-row">
+							<div class="field"><label>수상</label><input name="award" /></div>
+							<div class="field"><label>소재</label><input name="material" /></div>
+						</div>
+						<div class="field"><label>컨셉</label><textarea name="concept" rows="2"></textarea></div>
 						<div class="field"><label>로그라인 (공개)</label><textarea name="logline" rows="3" required></textarea></div>
-						<div class="field"><label>상세 시놉시스 (로그인 사용자만 열람)</label><textarea name="synopsis" rows="4"></textarea></div>
+						<div class="field"><label>상세 시놉시스 (열람 권한 있는 회원만)</label><textarea name="synopsis" rows="4"></textarea></div>
+						<div class="field"><label>기획의도 (열람 권한 있는 회원만)</label><textarea name="planningIntent" rows="4"></textarea></div>
+						<div class="field"><label>주요 이미지 URL (열람 권한 있는 회원만, 줄바꿈으로 구분)</label><textarea name="keyImages" rows="3" placeholder="https://.../image1.jpg"></textarea></div>
 						<div class="form-actions">
 							<button type="submit" class="save-btn">저장</button>
 							<button type="button" class="cancel-btn" onclick="document.getElementById('ip-form-wrap')?.setAttribute('hidden','')">취소</button>
@@ -221,7 +232,7 @@ import Layout from '../layouts/Layout.astro';
 			<div class="list-item">
 				<span class="item-title">
 					${u.email || '(이메일 없음)'}
-					<small class="item-meta">${u.role === 'admin' ? '관리자' : '일반 사용자'}${u.ai_tools_access ? ' · AI 도구 사용 가능' : ''}</small>
+					<small class="item-meta">${u.role === 'admin' ? '관리자' : '일반 사용자'}${u.ai_tools_access ? ' · AI 도구 사용 가능' : ''}${u.ip_access ? ' · IP 상세 열람 가능' : ''}</small>
 				</span>
 				<span class="item-actions">
 					${u.id !== currentUserId ? `
@@ -230,6 +241,9 @@ import Layout from '../layouts/Layout.astro';
 						</button>
 						<button class="ai-access-btn" data-user-id="${u.id}" data-current-access="${u.ai_tools_access}">
 							${u.ai_tools_access ? 'AI 도구 권한 해제' : 'AI 도구 권한 부여'}
+						</button>
+						<button class="ip-access-btn" data-user-id="${u.id}" data-current-access="${u.ip_access}">
+							${u.ip_access ? 'IP 열람 권한 해제' : 'IP 열람 권한 부여'}
 						</button>
 						<button class="delete-btn" data-user-id="${u.id}">삭제</button>
 					` : '<span class="self-badge">본인</span>'}
@@ -253,6 +267,16 @@ import Layout from '../layouts/Layout.astro';
 				const grant = btn.dataset.currentAccess !== 'true';
 				if (!confirm(`AI 도구(회의 녹음/분석/이미지 생성) 사용 권한을 ${grant ? '부여' : '해제'}하시겠습니까?`)) return;
 				await supabase.from('profiles').update({ ai_tools_access: grant }).eq('id', userId);
+				loadUsers();
+			};
+		});
+
+		list.querySelectorAll<HTMLButtonElement>('.ip-access-btn').forEach((btn) => {
+			btn.onclick = async () => {
+				const userId = btn.dataset.userId!;
+				const grant = btn.dataset.currentAccess !== 'true';
+				if (!confirm(`IP 프로젝트 상세정보(시놉시스/기획의도/주요 이미지) 열람 권한을 ${grant ? '부여' : '해제'}하시겠습니까?`)) return;
+				await supabase.from('profiles').update({ ip_access: grant }).eq('id', userId);
 				loadUsers();
 			};
 		});
@@ -301,7 +325,7 @@ import Layout from '../layouts/Layout.astro';
 					if (!data) return;
 					const { data: synopsisRow } = await supabase
 						.from('ip_project_synopses')
-						.select('synopsis')
+						.select('synopsis, planning_intent, key_images')
 						.eq('project_id', id)
 						.maybeSingle();
 					const form = document.getElementById('ip-form') as HTMLFormElement;
@@ -311,8 +335,15 @@ import Layout from '../layouts/Layout.astro';
 					form.querySelector<HTMLInputElement>('[name="title"]')!.value = data.title;
 					form.querySelector<HTMLInputElement>('[name="genre"]')!.value = data.genre;
 					form.querySelector<HTMLSelectElement>('[name="stage"]')!.value = data.stage;
+					form.querySelector<HTMLInputElement>('[name="mainWriter"]')!.value = data.main_writer ?? '';
+					form.querySelector<HTMLInputElement>('[name="year"]')!.value = data.year ?? '';
+					form.querySelector<HTMLInputElement>('[name="award"]')!.value = data.award ?? '';
+					form.querySelector<HTMLInputElement>('[name="material"]')!.value = data.material ?? '';
+					form.querySelector<HTMLTextAreaElement>('[name="concept"]')!.value = data.concept ?? '';
 					form.querySelector<HTMLTextAreaElement>('[name="logline"]')!.value = data.logline;
 					form.querySelector<HTMLTextAreaElement>('[name="synopsis"]')!.value = synopsisRow?.synopsis ?? '';
+					form.querySelector<HTMLTextAreaElement>('[name="planningIntent"]')!.value = synopsisRow?.planning_intent ?? '';
+					form.querySelector<HTMLTextAreaElement>('[name="keyImages"]')!.value = (synopsisRow?.key_images ?? []).join('\n');
 					form.querySelector<HTMLInputElement>('[name="sortOrder"]')!.value = data.sort_order;
 				}
 			};
@@ -390,6 +421,11 @@ import Layout from '../layouts/Layout.astro';
 			genre: fd.get('genre') as string,
 			stage: fd.get('stage') as string,
 			logline: fd.get('logline') as string,
+			main_writer: fd.get('mainWriter') as string || '',
+			year: fd.get('year') ? Number(fd.get('year')) : null,
+			award: fd.get('award') as string || '',
+			concept: fd.get('concept') as string || '',
+			material: fd.get('material') as string || '',
 			sort_order: Number(fd.get('sortOrder')),
 		};
 		if (id) {
@@ -399,10 +435,19 @@ import Layout from '../layouts/Layout.astro';
 		}
 
 		const synopsis = (fd.get('synopsis') as string || '').trim();
-		if (synopsis) {
-			await supabase
-				.from('ip_project_synopses')
-				.upsert({ project_id: projectId, synopsis, updated_at: new Date().toISOString() });
+		const planningIntent = (fd.get('planningIntent') as string || '').trim();
+		const keyImages = (fd.get('keyImages') as string || '')
+			.split('\n')
+			.map((s) => s.trim())
+			.filter(Boolean);
+		if (synopsis || planningIntent || keyImages.length) {
+			await supabase.from('ip_project_synopses').upsert({
+				project_id: projectId,
+				synopsis,
+				planning_intent: planningIntent,
+				key_images: keyImages,
+				updated_at: new Date().toISOString(),
+			});
 		}
 
 		document.getElementById('ip-form-wrap')?.setAttribute('hidden', '');

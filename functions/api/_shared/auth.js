@@ -2,10 +2,7 @@
 // 클라이언트가 보낸 Supabase access token을 검증하고 profiles.role/ai_tools_access를 확인합니다.
 // 서비스 롤 키 없이, 사용자 본인 토큰으로 Supabase REST API를 직접 호출합니다.
 //
-// TEMP: 회원가입/로그인 플로우가 아직 정상화되지 않아, PD 워크플로우 PoC를 먼저 사이트에
-// 통합하기 위해 이 검증을 잠시 꺼둔 상태입니다(AI_TOOLS_AUTH_ENABLED = false).
-// 로그인/권한 시스템이 정상화되면 아래 값을 true로 바꿔서 다시 로그인+권한 필수로 되돌리세요.
-const AI_TOOLS_AUTH_ENABLED = false;
+const AI_TOOLS_AUTH_ENABLED = true;
 
 export function jsonError(status, message) {
   return new Response(JSON.stringify({ error: message }), {
