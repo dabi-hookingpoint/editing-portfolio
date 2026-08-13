@@ -8,8 +8,15 @@ const projects = (await getCollection('ipProjects')).sort(
 ---
 
 <Layout title="IP DEVELOPMENT — Hooking Point">
+	<div class="hero-band">
+		<span class="blob blob-1" aria-hidden="true"></span>
+		<span class="blob blob-2" aria-hidden="true"></span>
+		<div class="hero-band-inner">
+			<h1>IP DEVELOPMENT</h1>
+		</div>
+	</div>
+
 	<div class="page">
-		<h1>IP DEVELOPMENT</h1>
 		<p class="intro">프로젝트별 AI 제작 도구입니다. 회의 녹음/자동 요약, 시나리오 3막 구조 분석, 레퍼런스 추천, 컨셉 이미지 생성을 프로젝트마다 로그인 없이 바로 사용할 수 있습니다.</p>
 
 		<ul class="ip-grid">
@@ -27,9 +34,44 @@ const projects = (await getCollection('ipProjects')).sort(
 </Layout>
 
 <style>
-	h1 {
-		margin-bottom: 0.5rem;
+	.hero-band {
+		position: relative;
+		overflow: hidden;
+		background: linear-gradient(135deg, #0f2fa8, var(--accent) 60%, #2e64f2);
+		padding: 1.75rem 2rem;
+		margin-bottom: 2.5rem;
 	}
+	.hero-band-inner {
+		position: relative;
+		z-index: 1;
+		max-width: 1100px;
+		margin-inline: auto;
+	}
+	.hero-band h1 {
+		margin: 0;
+		font-size: 1.7rem;
+		color: #fff;
+	}
+	.blob {
+		position: absolute;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.08);
+		filter: blur(2px);
+	}
+	.blob-1 {
+		width: 220px;
+		height: 220px;
+		top: -160px;
+		right: 8%;
+	}
+	.blob-2 {
+		width: 160px;
+		height: 160px;
+		bottom: -130px;
+		right: 24%;
+		background: rgba(255, 255, 255, 0.06);
+	}
+
 	.intro {
 		color: var(--muted);
 		max-width: 40rem;
