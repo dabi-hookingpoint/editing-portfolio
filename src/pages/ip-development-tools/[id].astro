@@ -68,6 +68,7 @@ const { title, genre, stage } = project.data;
 				<div class="tool-card">
 					<label class="field-label" for="im-prompt">씬 설명 / 컨셉 프롬프트</label>
 					<textarea id="im-prompt" rows="4" placeholder="예: 비 내리는 도심 골목, 네온사인 반사, 느와르 톤, 영화적 조명"></textarea>
+					<p class="hint">문장으로 길게 쓰기보다, 장소·인물·행동·분위기 등 핵심 키워드를 쉼표로 나열하면 더 정확한 이미지가 나옵니다.</p>
 					<div class="form-actions">
 						<button type="button" class="save-btn" id="im-run">컨셉 이미지 생성</button>
 					</div>
@@ -436,6 +437,7 @@ const { title, genre, stage } = project.data;
 				box.innerHTML = `
 					<span class="badge">엔진: ${data.provider}</span><br/>
 					<img class="concept-img" src="${data.url}" alt="concept image" />
+					${data.finalPrompt ? `<p class="hint">실제 사용된 프롬프트: ${data.finalPrompt}</p>` : ''}
 					${data.engineError ? `<p class="error-box">실 API 호출 실패로 목업으로 대체됨: ${data.engineError}</p>` : ''}
 				`;
 			} catch (err) {
