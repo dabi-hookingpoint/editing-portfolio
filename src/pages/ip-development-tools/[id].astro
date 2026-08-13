@@ -39,7 +39,7 @@ const { title, genre, stage } = project.data;
 						<button type="button" class="rec-toggle-btn" id="rec-toggle">● 녹음 시작</button>
 						<button type="button" class="cancel-btn" id="rec-clear">지우기</button>
 					</div>
-					<textarea id="rec-text" rows="6" placeholder="녹음을 시작하고 중지하면 자동으로 화자(A, B…)를 구분해 여기에 텍스트가 채워집니다. 직접 타이핑해서 수정해도 됩니다."></textarea>
+					<textarea id="rec-text" rows="6" placeholder="녹음 시작 후 말하면 실시간으로 텍스트가 쌓입니다. 말이 1.5초 이상 끊기면 자동으로 화자(A, B)가 전환됩니다(무료 방식 — 정확하지 않을 수 있어요). 직접 타이핑해서 수정해도 됩니다."></textarea>
 					<p class="hint" id="rec-hint">크롬(Chrome) 브라우저에서만 지원됩니다. 마이크 권한을 허용해주세요.</p>
 					<div class="form-actions">
 						<button type="button" class="save-btn" id="rec-save">이 내용 저장 (저장 시 AI 요약 자동 생성)</button>
@@ -160,82 +160,81 @@ const { title, genre, stage } = project.data;
 		}
 	}
 
-	// ---- record tab (+ 발화자 자동구분) ----
+	// ---- record tab (+ 무료 화자 자동구분: 침묵 기반 추정) ----
 	function initRecordTab() {
 		const recText = document.getElementById('rec-text');
 		const recToggle = document.getElementById('rec-toggle');
 		const recHint = document.getElementById('rec-hint');
 
-		let mediaRecorder = null;
-		let mediaStream = null;
-		let chunks = [];
-		let recording = false;
+		const PAUSE_THRESHOLD_MS = 1500;
+		let recognition = null;
+		let recognizing = false;
+		let baseText = '';
+		let currentSpeaker = 'A';
+		let lastFinalAt = 0;
 
-		const canRecord = !!(navigator.mediaDevices && window.MediaRecorder);
-		if (!canRecord) {
-			recToggle.disabled = true;
-			if (recHint) recHint.textContent = '이 브라우저는 오디오 녹음을 지원하지 않습니다. 크롬(Chrome)에서 열어주세요. 직접 타이핑은 가능합니다.';
-		}
+		const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-		async function startRecording() {
-			mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-			mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
-			chunks = [];
-			mediaRecorder.ondataavailable = (e) => {
-				if (e.data.size > 0) chunks.push(e.data);
-			};
-			mediaRecorder.onstop = () => {
-				mediaStream?.getTracks().forEach((t) => t.stop());
-				transcribeRecording(new Blob(chunks, { type: mimeType }));
-			};
-			mediaRecorder.start();
-		}
-
-		async function transcribeRecording(blob) {
-			recToggle.disabled = true;
-			if (recHint) recHint.textContent = '음성을 분석해 화자를 자동으로 구분하는 중입니다...';
-			try {
-				const headers = await authHeaders();
-				const res = await fetch('/api/transcribe', {
-					method: 'POST',
-					headers: { ...headers, 'content-type': blob.type },
-					body: blob,
-				});
-				const data = await res.json();
-				if (!res.ok) throw new Error(data?.error || `요청 실패 (${res.status})`);
-				const formatted = (data.utterances || []).map((u) => `[화자 ${u.speaker}] ${u.text}`).join('\n\n');
-				recText.value = recText.value.trim() ? `${recText.value.trim()}\n\n${formatted}` : formatted;
-				const speakerCount = new Set((data.utterances || []).map((u) => u.speaker)).size;
-				if (recHint) recHint.textContent = speakerCount ? `화자 ${speakerCount}명을 자동으로 구분했습니다. 필요하면 직접 수정하세요.` : '녹음이 중지되었습니다.';
-			} catch (err) {
-				if (recHint) recHint.textContent = `자동 화자 구분 실패: ${err.message}`;
-			} finally {
-				recToggle.disabled = false;
+		function appendFinal(text) {
+			const now = Date.now();
+			if (lastFinalAt && now - lastFinalAt > PAUSE_THRESHOLD_MS) {
+				currentSpeaker = currentSpeaker === 'A' ? 'B' : 'A';
 			}
+			lastFinalAt = now;
+			baseText += (baseText ? '\n\n' : '') + `[화자 ${currentSpeaker}] ` + text;
 		}
 
-		recToggle.addEventListener('click', async () => {
-			if (!recording) {
-				try {
-					await startRecording();
-				} catch (err) {
-					if (recHint) recHint.textContent = `마이크 접근 실패: ${err.message}`;
-					return;
+		if (!SpeechRecognitionImpl) {
+			recToggle.disabled = true;
+			if (recHint) recHint.textContent = '이 브라우저는 음성인식(Web Speech API)을 지원하지 않습니다. 크롬(Chrome)에서 열어주세요. 직접 타이핑은 가능합니다.';
+		} else {
+			recognition = new SpeechRecognitionImpl();
+			recognition.lang = 'ko-KR';
+			recognition.continuous = true;
+			recognition.interimResults = true;
+
+			recognition.onresult = (event) => {
+				let finalChunk = '';
+				let interimChunk = '';
+				for (let i = event.resultIndex; i < event.results.length; i++) {
+					const transcript = event.results[i][0].transcript;
+					if (event.results[i].isFinal) finalChunk += transcript;
+					else interimChunk += transcript;
 				}
-				recording = true;
+				if (finalChunk) appendFinal(finalChunk.trim());
+				recText.value = baseText + (interimChunk ? ` [${interimChunk}]` : '');
+			};
+			recognition.onerror = (e) => {
+				if (recHint) recHint.textContent = `음성인식 오류: ${e.error}. 마이크 권한을 확인해주세요.`;
+			};
+			recognition.onend = () => {
+				if (recognizing) recognition.start();
+			};
+		}
+
+		recToggle.addEventListener('click', () => {
+			if (!recognition) return;
+			if (!recognizing) {
+				baseText = recText.value;
+				lastFinalAt = 0;
+				currentSpeaker = 'A';
+				recognizing = true;
+				recognition.start();
 				recToggle.textContent = '■ 녹음 중지';
 				recToggle.classList.add('on');
-				if (recHint) recHint.textContent = '녹음 중입니다...';
+				if (recHint) recHint.textContent = '듣고 있습니다... 말이 1.5초 이상 끊기면 자동으로 화자가 전환됩니다 (무료 방식이라 정확하지 않을 수 있어요 — 필요하면 직접 수정하세요).';
 			} else {
-				recording = false;
+				recognizing = false;
+				recognition.stop();
 				recToggle.textContent = '● 녹음 시작';
 				recToggle.classList.remove('on');
-				mediaRecorder?.stop();
+				if (recHint) recHint.textContent = '녹음이 중지되었습니다.';
 			}
 		});
 
 		document.getElementById('rec-clear')?.addEventListener('click', () => {
+			baseText = '';
+			lastFinalAt = 0;
 			recText.value = '';
 		});
 
@@ -246,6 +245,8 @@ const { title, genre, stage } = project.data;
 			const date = document.getElementById('rec-date').value || '';
 			const record = saveTranscriptLocal({ director, date, content: text, char_count: text.length });
 			recText.value = '';
+			baseText = '';
+			lastFinalAt = 0;
 			document.getElementById('rec-date').value = '';
 			await loadTranscripts();
 			document.querySelector(`.summarize-btn[data-id="${record.id}"]`)?.click();
