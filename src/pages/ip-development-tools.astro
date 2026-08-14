@@ -29,6 +29,8 @@ const projectsData = projects.map((p) => ({
 	</div>
 
 	<div class="page">
+		<a class="back-link" href="/">← 홈으로</a>
+
 		<p class="intro">프로젝트별 AI 제작 도구입니다. 회의 녹음/자동 요약, 시나리오 3막 구조 분석, 레퍼런스 추천, 컨셉 이미지 생성을 프로젝트마다 로그인 없이 바로 사용할 수 있습니다.</p>
 
 		<nav class="view-tabs" role="tablist">
@@ -352,6 +354,16 @@ const projectsData = projects.map((p) => ({
 		background: rgba(255, 255, 255, 0.06);
 	}
 
+	.back-link {
+		display: inline-block;
+		margin-bottom: 1.5rem;
+		color: var(--muted);
+		transition: color 0.15s ease;
+	}
+	.back-link:hover {
+		color: var(--fg);
+	}
+
 	.intro {
 		color: var(--muted);
 		max-width: 40rem;
@@ -441,27 +453,16 @@ const projectsData = projects.map((p) => ({
 		margin: 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-		gap: 1.5rem;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 2rem 1.5rem;
 	}
 	.ip-card {
-		font: inherit;
-		text-align: left;
-		width: 100%;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		padding: 1.5rem;
-		cursor: pointer;
-		color: inherit;
 		display: flex;
 		flex-direction: column;
-		box-shadow: var(--shadow);
-		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+		color: inherit;
+		transition: transform 0.15s ease;
 	}
 	.ip-card:hover {
-		border-color: var(--accent);
-		box-shadow: var(--shadow-hover);
 		transform: translateY(-2px);
 	}
 	.stage-badge {
@@ -474,9 +475,10 @@ const projectsData = projects.map((p) => ({
 		background: var(--accent-dim);
 		border-radius: 999px;
 		padding: 0.2rem 0.6rem;
-		margin-bottom: 0.8rem;
+		margin-bottom: 0.6rem;
 	}
 	.ip-title {
+		font-size: 1rem;
 		font-weight: 700;
 		color: var(--heading);
 		margin-bottom: 0.2rem;

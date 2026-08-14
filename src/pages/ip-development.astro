@@ -6,23 +6,7 @@ const projects = (await getCollection('ipProjects')).sort(
 	(a, b) => (a.data.sortOrder ?? 0) - (b.data.sortOrder ?? 0)
 );
 
-const icons = {
-	person: '<circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1.2-3.2 4-4.8 7-4.8s5.8 1.6 7 4.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-	tag: '<path d="M11 4h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8A1 1 0 0 1 11 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="15" cy="9" r="1.1" fill="currentColor"/>',
-	clock: '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
-	trophy: '<path d="M7 4h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 5H4v1a4 4 0 0 0 4 4M17 5h3v1a4 4 0 0 1-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 12v3M9 19h6M10 19v-2.5a2 2 0 0 1 2-2 2 2 0 0 1 2 2V19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
-	bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .9 1.6h5.2c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
-	layers: '<path d="M12 4 3 8.5 12 13l9-4.5L12 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 13l9 4.5 9-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
-};
-
-const fields = [
-	{ key: 'mainWriter', label: '메인작가', icon: 'person' },
-	{ key: 'stage', label: '구분', icon: 'tag' },
-	{ key: 'year', label: '년도', icon: 'clock' },
-	{ key: 'award', label: '수상', icon: 'trophy' },
-	{ key: 'concept', label: '컨셉', icon: 'bulb' },
-	{ key: 'material', label: '소재', icon: 'layers' },
-];
+const STAGES = ['기획', '트리트먼트', '대본', '개발', '피칭'];
 ---
 
 <Layout title="IP정보 — Hooking Point">
@@ -35,31 +19,47 @@ const fields = [
 	</div>
 
 	<div class="page">
-		<p class="intro">현재 개발 중인 오리지널 IP입니다. 시놉시스·기획의도·주요 이미지 등 상세정보는 관리자로부터 열람 권한을 부여받은 회원만 확인할 수 있습니다.</p>
-		<p class="intro">궁금하신 작품이 있다면 <a href="mailto:hooking.point@gmail.com">hooking.point@gmail.com</a>으로 열람 요청 주세요.</p>
+		<a class="back-link" href="/">← 홈으로</a>
+
+		<p class="intro">현재 개발 중인 오리지널 IP입니다. 시놉시스·기획의도·주요 이미지 등 상세정보는 관리자로부터 열람 권한을 부여받은 회원만 확인할 수 있습니다. 궁금하신 작품이 있다면 <a href="mailto:hooking.point@gmail.com">hooking.point@gmail.com</a>으로 열람 요청 주세요.</p>
+
+		<div class="filters" role="tablist">
+			<button type="button" class="filter" data-filter="전체" aria-pressed="true">전체</button>
+			{STAGES.map((s) => (
+				<button type="button" class="filter" data-filter={s} aria-pressed="false">{s}</button>
+			))}
+		</div>
 
 		<ul class="ip-grid">
 			{projects.map((p) => (
-				<li>
+				<li class="ip-card-item" data-stage={p.data.stage}>
 					<a class="ip-card" href={`/ip-development/${p.id}`}>
 						<span class="ip-genre">[{p.data.genre}]</span>
 						<span class="ip-title">{p.data.title}</span>
-						<ul class="ip-fields">
-							{fields.map((f) => (
-								<li>
-									<span class="field-icon" set:html={`<svg viewBox="0 0 24 24" width="16" height="16">${icons[f.icon]}</svg>`} />
-									<span class="field-label">{f.label}</span>
-									<span class="field-sep">:</span>
-									<span class="field-value">{p.data[f.key] ?? '-'}</span>
-								</li>
-							))}
-						</ul>
+						<span class="ip-meta">{p.data.stage}{p.data.year ? ` · ${p.data.year}` : ''}</span>
 					</a>
 				</li>
 			))}
 		</ul>
 	</div>
 </Layout>
+
+<script>
+	const filters = document.querySelectorAll<HTMLButtonElement>('.filter');
+	const cards = document.querySelectorAll<HTMLLIElement>('.ip-card-item');
+
+	filters.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			filters.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+			btn.setAttribute('aria-pressed', 'true');
+			const target = btn.dataset.filter;
+			cards.forEach((card) => {
+				const show = target === '전체' || card.dataset.stage === target;
+				card.style.display = show ? '' : 'none';
+			});
+		});
+	});
+</script>
 
 <style>
 	.hero-band {
@@ -100,13 +100,46 @@ const fields = [
 		background: rgba(255, 255, 255, 0.06);
 	}
 
+	.back-link {
+		display: inline-block;
+		margin-bottom: 1.5rem;
+		color: var(--muted);
+		transition: color 0.15s ease;
+	}
+	.back-link:hover {
+		color: var(--fg);
+	}
+
 	.intro {
 		color: var(--muted);
 		max-width: 40rem;
-		margin: 0 0 1rem;
+		margin: 0 0 2.5rem;
 	}
-	.intro:last-of-type {
+
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.5rem;
 		margin-bottom: 2.5rem;
+	}
+	.filter {
+		font: inherit;
+		font-size: 0.9rem;
+		font-weight: 600;
+		background: none;
+		border: none;
+		color: var(--muted);
+		border-radius: 999px;
+		padding: 0.5rem 1.1rem;
+		cursor: pointer;
+		transition: color 0.15s ease, background-color 0.15s ease;
+	}
+	.filter:hover {
+		color: var(--heading);
+	}
+	.filter[aria-pressed='true'] {
+		background: var(--surface-strong);
+		color: var(--heading);
 	}
 
 	.ip-grid {
@@ -114,28 +147,15 @@ const fields = [
 		margin: 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 1.5rem;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 2rem 1.5rem;
 	}
 	.ip-card {
-		font: inherit;
-		text-align: left;
-		width: 100%;
-		height: 100%;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		padding: 1.5rem;
-		cursor: pointer;
+		display: block;
 		color: inherit;
-		display: flex;
-		flex-direction: column;
-		box-shadow: var(--shadow);
-		transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+		transition: transform 0.15s ease;
 	}
 	.ip-card:hover {
-		border-color: var(--accent);
-		box-shadow: var(--shadow-hover);
 		transform: translateY(-2px);
 	}
 	.ip-genre {
@@ -143,50 +163,18 @@ const fields = [
 		font-size: 0.8rem;
 		font-weight: 700;
 		color: var(--accent);
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.3rem;
 	}
 	.ip-title {
 		display: block;
-		font-size: 1.2rem;
+		font-size: 1rem;
 		font-weight: 700;
 		color: var(--heading);
-		margin-bottom: 1.1rem;
+		margin-bottom: 0.2rem;
 	}
-	.ip-fields {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: grid;
-		gap: 0.55rem;
-	}
-	.ip-fields li {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+	.ip-meta {
+		display: block;
 		font-size: 0.85rem;
-	}
-	.field-icon {
-		display: inline-flex;
-		flex-shrink: 0;
-		width: 22px;
-		height: 22px;
-		align-items: center;
-		justify-content: center;
-		border-radius: 50%;
-		background: var(--accent-dim);
-		color: var(--accent);
-	}
-	.field-label {
 		color: var(--muted);
-		flex-shrink: 0;
-	}
-	.field-sep {
-		color: var(--muted);
-	}
-	.field-value {
-		color: var(--fg);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 </style>
