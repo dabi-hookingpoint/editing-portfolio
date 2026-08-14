@@ -43,6 +43,8 @@ const infoFields = [
 			<h2>로그라인</h2>
 			<div id="detail-protected">확인 중…</div>
 		</div>
+
+		<a class="tools-link" href={`/ip-development-tools/${id}`}>이 프로젝트의 AI 도구 열기 →</a>
 	</div>
 </Layout>
 
@@ -190,4 +192,22 @@ const infoFields = [
 		display: block;
 	}
 
+	.tools-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		padding: 0.75rem 1.3rem;
+		border-radius: 6px;
+		background: var(--accent);
+		color: var(--heading);
+		font-weight: 700;
+		font-size: 0.95rem;
+		text-decoration: none;
+		transition: background-color 0.15s ease, transform 0.15s ease;
+	}
+	.tools-link:hover {
+		background: #1440b8;
+		transform: translateY(-1px);
+	}
 </style>

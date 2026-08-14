@@ -62,8 +62,11 @@ const projectsData = projects.map((p) => ({
 </Layout>
 
 <script>
+	import { supabase } from '../lib/supabase';
+
 	const STAGES = ['기획', '트리트먼트', '대본', '개발', '피칭'];
-	const projects = JSON.parse(document.getElementById('ip-projects-data')?.textContent || '[]');
+	let projects = JSON.parse(document.getElementById('ip-projects-data')?.textContent || '[]');
+	let isAdmin = false;
 
 	let currentView = 'list';
 	let currentStage = '전체';
@@ -72,6 +75,34 @@ const projectsData = projects.map((p) => ({
 
 	function escapeHtml(s) {
 		return String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+	}
+
+	async function refreshFromDb() {
+		const { data, error } = await supabase
+			.from('ip_projects')
+			.select('id, title, genre, stage, year, target_date, sort_order')
+			.order('sort_order', { ascending: true });
+		if (!error && data) {
+			projects = data.map((row) => ({
+				id: row.id,
+				title: row.title,
+				genre: row.genre,
+				stage: row.stage,
+				year: row.year,
+				targetDate: row.target_date,
+				sortOrder: row.sort_order,
+			}));
+		}
+
+		const { data: { session } } = await supabase.auth.getSession();
+		if (session) {
+			const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+			isAdmin = profile?.role === 'admin';
+		} else {
+			isAdmin = false;
+		}
+
+		renderAll();
 	}
 
 	function getFiltered() {
@@ -90,7 +121,7 @@ const projectsData = projects.map((p) => ({
 
 	function cardHtml(p) {
 		return `
-			<a class="ip-card" href="/ip-development-tools/${p.id}">
+			<a class="ip-card" href="/ip-development/${p.id}">
 				<span class="stage-badge">${escapeHtml(p.stage)}</span>
 				<span class="ip-title">${escapeHtml(p.title)}</span>
 				<span class="ip-genre">${escapeHtml(p.genre)}</span>
@@ -110,15 +141,16 @@ const projectsData = projects.map((p) => ({
 		const el = document.getElementById('view-board');
 		const list = getFiltered();
 		el.innerHTML = `
+			${isAdmin ? `<p class="hint drag-hint">카드를 드래그해서 다른 단계로 옮기면 바로 반영됩니다.</p>` : ''}
 			<div class="board">
 				${STAGES.map((stage) => {
 					const items = list.filter((p) => p.stage === stage);
 					return `
 						<div class="board-col">
 							<h3>${stage} <span class="board-count">${items.length}</span></h3>
-							<div class="board-items">
+							<div class="board-items" data-stage-drop="${stage}">
 								${items.map((p) => `
-									<a class="board-card" href="/ip-development-tools/${p.id}">
+									<a class="board-card" href="/ip-development/${p.id}" data-id="${p.id}" draggable="${isAdmin}">
 										<span class="ip-title">${escapeHtml(p.title)}</span>
 										<span class="ip-genre">${escapeHtml(p.genre)}</span>
 									</a>
@@ -129,6 +161,7 @@ const projectsData = projects.map((p) => ({
 				}).join('')}
 			</div>
 		`;
+		if (isAdmin) attachBoardDnD();
 	}
 
 	function renderTimeline() {
@@ -145,10 +178,10 @@ const projectsData = projects.map((p) => ({
 		});
 
 		const groupHtml = [...groups.entries()].map(([month, items]) => `
-			<div class="timeline-group">
+			<div class="timeline-group" data-month-drop="${month}">
 				<h3>${month.replace('-', '년 ')}월</h3>
 				${items.map((p) => `
-					<a class="timeline-item" href="/ip-development-tools/${p.id}">
+					<a class="timeline-item" href="/ip-development/${p.id}" data-id="${p.id}" draggable="${isAdmin}">
 						<span class="timeline-date">${p.targetDate}</span>
 						<span class="stage-badge">${escapeHtml(p.stage)}</span>
 						<span class="ip-title">${escapeHtml(p.title)}</span>
@@ -157,20 +190,88 @@ const projectsData = projects.map((p) => ({
 			</div>
 		`).join('');
 
-		const unscheduledHtml = withoutDate.length ? `
-			<div class="timeline-group">
+		const unscheduledHtml = `
+			<div class="timeline-group" data-month-drop="">
 				<h3>목표일 미정</h3>
 				${withoutDate.map((p) => `
-					<a class="timeline-item" href="/ip-development-tools/${p.id}">
+					<a class="timeline-item" href="/ip-development/${p.id}" data-id="${p.id}" draggable="${isAdmin}">
 						<span class="timeline-date">-</span>
 						<span class="stage-badge">${escapeHtml(p.stage)}</span>
 						<span class="ip-title">${escapeHtml(p.title)}</span>
 					</a>
-				`).join('')}
+				`).join('') || (isAdmin ? `<p class="hint">여기로 드래그하면 목표일이 지워집니다.</p>` : '')}
 			</div>
-		` : '';
+		`;
 
-		el.innerHTML = (groupHtml + unscheduledHtml) || `<p class="hint">조건에 맞는 프로젝트가 없습니다.</p>`;
+		el.innerHTML = `
+			${isAdmin ? `<p class="hint drag-hint">카드를 다른 달로 드래그하면 목표일이 그 달로 바뀝니다 (날짜는 15일로 지정). "목표일 미정"으로 드래그하면 지워집니다.</p>` : ''}
+			${(list.length ? (groupHtml + unscheduledHtml) : `<p class="hint">조건에 맞는 프로젝트가 없습니다.</p>`)}
+		`;
+		if (isAdmin) attachTimelineDnD();
+	}
+
+	function attachBoardDnD() {
+		document.querySelectorAll('.board-card').forEach((card) => {
+			card.addEventListener('dragstart', (e) => {
+				e.dataTransfer.setData('text/plain', card.dataset.id);
+				e.dataTransfer.effectAllowed = 'move';
+			});
+		});
+		document.querySelectorAll('.board-items').forEach((col) => {
+			col.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				col.classList.add('drag-over');
+			});
+			col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+			col.addEventListener('drop', async (e) => {
+				e.preventDefault();
+				col.classList.remove('drag-over');
+				const id = e.dataTransfer.getData('text/plain');
+				const newStage = col.dataset.stageDrop;
+				const project = projects.find((p) => p.id === id);
+				if (!project || project.stage === newStage) return;
+				const { error } = await supabase.from('ip_projects').update({ stage: newStage }).eq('id', id);
+				if (error) {
+					alert(`단계 변경 실패: ${error.message}`);
+					return;
+				}
+				project.stage = newStage;
+				renderAll();
+			});
+		});
+	}
+
+	function attachTimelineDnD() {
+		document.querySelectorAll('.timeline-item').forEach((item) => {
+			item.addEventListener('dragstart', (e) => {
+				e.dataTransfer.setData('text/plain', item.dataset.id);
+				e.dataTransfer.effectAllowed = 'move';
+			});
+		});
+		document.querySelectorAll('.timeline-group').forEach((group) => {
+			group.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				group.classList.add('drag-over');
+			});
+			group.addEventListener('dragleave', () => group.classList.remove('drag-over'));
+			group.addEventListener('drop', async (e) => {
+				e.preventDefault();
+				group.classList.remove('drag-over');
+				const id = e.dataTransfer.getData('text/plain');
+				const month = group.dataset.monthDrop;
+				const project = projects.find((p) => p.id === id);
+				if (!project) return;
+				const newDate = month ? `${month}-15` : null;
+				if (project.targetDate === newDate) return;
+				const { error } = await supabase.from('ip_projects').update({ target_date: newDate }).eq('id', id);
+				if (error) {
+					alert(`목표일 변경 실패: ${error.message}`);
+					return;
+				}
+				project.targetDate = newDate;
+				renderAll();
+			});
+		});
 	}
 
 	function renderAll() {
@@ -209,6 +310,7 @@ const projectsData = projects.map((p) => ({
 	});
 
 	renderAll();
+	refreshFromDb();
 </script>
 
 <style is:global>
@@ -407,6 +509,12 @@ const projectsData = projects.map((p) => ({
 		display: flex;
 		flex-direction: column;
 		gap: 0.6rem;
+		min-height: 3rem;
+		border-radius: 8px;
+		transition: background-color 0.15s ease;
+	}
+	.board-items.drag-over {
+		background: var(--accent-dim);
 	}
 	.board-card {
 		display: flex;
@@ -422,6 +530,12 @@ const projectsData = projects.map((p) => ({
 	.board-card:hover {
 		border-color: var(--accent);
 	}
+	.board-card[draggable='true'] {
+		cursor: grab;
+	}
+	.drag-hint {
+		margin: 0 0 1rem;
+	}
 	.board-card .ip-title {
 		font-size: 0.85rem;
 		margin: 0;
@@ -432,6 +546,11 @@ const projectsData = projects.map((p) => ({
 
 	.timeline-group {
 		margin-bottom: 1.8rem;
+		border-radius: 8px;
+		transition: background-color 0.15s ease;
+	}
+	.timeline-group.drag-over {
+		background: var(--accent-dim);
 	}
 	.timeline-group h3 {
 		font-size: 0.9rem;
@@ -447,6 +566,9 @@ const projectsData = projects.map((p) => ({
 		padding: 0.6rem 0;
 		color: inherit;
 		border-bottom: 1px dashed var(--border);
+	}
+	.timeline-item[draggable='true'] {
+		cursor: grab;
 	}
 	.timeline-item:last-child {
 		border-bottom: none;
