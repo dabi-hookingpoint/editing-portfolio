@@ -92,10 +92,14 @@ import Layout from '../layouts/Layout.astro';
 							<div class="field"><label>년도</label><input name="year" type="number" /></div>
 						</div>
 						<div class="form-row">
+							<div class="field"><label>목표일 (보기 전환의 타임라인용)</label><input name="targetDate" type="date" /></div>
+						</div>
+						<div class="form-row">
 							<div class="field"><label>수상</label><input name="award" /></div>
 							<div class="field"><label>소재</label><input name="material" /></div>
 						</div>
 						<div class="field"><label>컨셉</label><textarea name="concept" rows="2"></textarea></div>
+						<div class="field"><label>커스텀 속성 (줄바꿈으로 구분, "속성명: 값" 형식)</label><textarea name="customFields" rows="3" placeholder="타겟플랫폼: OTT&#10;예산규모: 중"></textarea></div>
 						<div class="field"><label>로그라인 (공개)</label><textarea name="logline" rows="3" required></textarea></div>
 						<div class="field"><label>상세 시놉시스 (열람 권한 있는 회원만)</label><textarea name="synopsis" rows="4"></textarea></div>
 						<div class="field"><label>기획의도 (열람 권한 있는 회원만)</label><textarea name="planningIntent" rows="4"></textarea></div>
@@ -337,9 +341,11 @@ import Layout from '../layouts/Layout.astro';
 					form.querySelector<HTMLSelectElement>('[name="stage"]')!.value = data.stage;
 					form.querySelector<HTMLInputElement>('[name="mainWriter"]')!.value = data.main_writer ?? '';
 					form.querySelector<HTMLInputElement>('[name="year"]')!.value = data.year ?? '';
+					form.querySelector<HTMLInputElement>('[name="targetDate"]')!.value = data.target_date ?? '';
 					form.querySelector<HTMLInputElement>('[name="award"]')!.value = data.award ?? '';
 					form.querySelector<HTMLInputElement>('[name="material"]')!.value = data.material ?? '';
 					form.querySelector<HTMLTextAreaElement>('[name="concept"]')!.value = data.concept ?? '';
+					form.querySelector<HTMLTextAreaElement>('[name="customFields"]')!.value = Object.entries(data.custom_fields ?? {}).map(([k, v]) => `${k}: ${v}`).join('\n');
 					form.querySelector<HTMLTextAreaElement>('[name="logline"]')!.value = data.logline;
 					form.querySelector<HTMLTextAreaElement>('[name="synopsis"]')!.value = synopsisRow?.synopsis ?? '';
 					form.querySelector<HTMLTextAreaElement>('[name="planningIntent"]')!.value = synopsisRow?.planning_intent ?? '';
@@ -423,9 +429,16 @@ import Layout from '../layouts/Layout.astro';
 			logline: fd.get('logline') as string,
 			main_writer: fd.get('mainWriter') as string || '',
 			year: fd.get('year') ? Number(fd.get('year')) : null,
+			target_date: fd.get('targetDate') as string || null,
 			award: fd.get('award') as string || '',
 			concept: fd.get('concept') as string || '',
 			material: fd.get('material') as string || '',
+			custom_fields: Object.fromEntries(
+				(fd.get('customFields') as string || '')
+					.split('\n')
+					.map((line) => line.split(':').map((s) => s.trim()))
+					.filter(([k, v]) => k && v)
+			),
 			sort_order: Number(fd.get('sortOrder')),
 		};
 		if (id) {

@@ -29,6 +29,8 @@ const ipProjectSchema = z.object({
   award: z.string().optional(),
   concept: z.string().optional(),
   material: z.string().optional(),
+  customFields: z.record(z.string(), z.string()).optional(),
+  targetDate: z.string().optional(),
   sortOrder: z.number().optional(),
 });
 
@@ -99,6 +101,8 @@ const ipProjects = defineCollection({
       award: row.award ?? undefined,
       concept: row.concept ?? undefined,
       material: row.material ?? undefined,
+      customFields: row.custom_fields ?? undefined,
+      targetDate: row.target_date ?? undefined,
       sortOrder: row.sort_order,
     }));
   },

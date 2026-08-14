@@ -27,6 +27,9 @@ const { title, genre, stage } = project.data;
 				<button type="button" data-tab="record" class="tab-btn active">① 회의 녹음/저장</button>
 				<button type="button" data-tab="analyze" class="tab-btn">② 구조 분석 · 레퍼런스</button>
 				<button type="button" data-tab="image" class="tab-btn">③ 컨셉 이미지</button>
+				<button type="button" data-tab="checklist" class="tab-btn">④ 체크리스트</button>
+				<button type="button" data-tab="comments" class="tab-btn">⑤ 댓글</button>
+				<button type="button" data-tab="activity" class="tab-btn">⑥ 활동 기록</button>
 			</nav>
 
 			<section class="tool-panel active" id="panel-record">
@@ -62,6 +65,10 @@ const { title, genre, stage } = project.data;
 				</div>
 				<div class="tool-card" id="an-result" hidden></div>
 				<div class="tool-card" id="ref-result" hidden></div>
+				<div class="tool-card">
+					<h2>저장된 레퍼런스 — 이 프로젝트</h2>
+					<div id="saved-ref-list"></div>
+				</div>
 			</section>
 
 			<section class="tool-panel" id="panel-image">
@@ -76,6 +83,51 @@ const { title, genre, stage } = project.data;
 				</div>
 				<div class="tool-card" id="im-result" hidden></div>
 			</section>
+
+			<section class="tool-panel" id="panel-checklist">
+				<div class="tool-card">
+					<h2>체크리스트</h2>
+					<div class="form-row" id="task-add-row" style="display: none;">
+						<div class="field" style="flex: 3;">
+							<label for="task-input">할 일</label>
+							<input type="text" id="task-input" placeholder="예: 트리트먼트 2차 수정" />
+						</div>
+						<div class="field">
+							<label for="task-assignee">담당자</label>
+							<select id="task-assignee"><option value="">미지정</option></select>
+						</div>
+					</div>
+					<div class="form-actions" id="task-add-actions" style="display: none;">
+						<button type="button" class="save-btn" id="task-add-btn">추가</button>
+					</div>
+					<div id="task-list"></div>
+				</div>
+			</section>
+
+			<section class="tool-panel" id="panel-comments">
+				<div class="tool-card">
+					<h2>댓글 / 업데이트</h2>
+					<p class="hint">회의 없이도 근황을 남길 수 있는 공간입니다. "@아이디"로 팀원을 멘션하면 알림이 갑니다.</p>
+					<div class="form-row" id="comment-add-row" style="display: none;">
+						<div class="field" style="flex: 1;">
+							<label for="comment-input">댓글 남기기</label>
+							<textarea id="comment-input" rows="3" placeholder="예: @다비 트리트먼트 2차 수정 초안 올렸습니다, 확인 부탁드려요"></textarea>
+						</div>
+					</div>
+					<div class="form-actions" id="comment-add-actions" style="display: none;">
+						<button type="button" class="save-btn" id="comment-add-btn">댓글 등록</button>
+					</div>
+					<div id="comment-list"></div>
+				</div>
+			</section>
+
+			<section class="tool-panel" id="panel-activity">
+				<div class="tool-card">
+					<h2>활동 기록</h2>
+					<p class="hint">단계 변경, 할 일 생성/완료/삭제, 댓글, 레퍼런스 저장이 자동으로 기록됩니다.</p>
+					<div id="activity-list"></div>
+				</div>
+			</section>
 		</section>
 	</div>
 </Layout>
@@ -86,7 +138,34 @@ const { title, genre, stage } = project.data;
 	// 로컬스토리지 기반 회의 기록 저장은 유지 중입니다(추후 pd_meeting_transcripts 테이블로 전환 예정).
 
 	const projectId = (document.querySelector('.page') as HTMLElement).dataset.projectId!;
+	const projectTitle = (document.querySelector('.page') as HTMLElement).dataset.projectTitle!;
 	const LOCAL_TRANSCRIPTS_KEY = `pd_meeting_transcripts_${projectId}`;
+
+	function requestAccessHtml(message: string) {
+		const mailto = `mailto:hooking.point@gmail.com?subject=${encodeURIComponent(`[${projectTitle}] 권한 요청`)}`;
+		return `<p class="hint">${message} 권한이 필요하시면 <a href="${mailto}">hooking.point@gmail.com</a>로 문의해주세요.</p>`;
+	}
+
+	async function loadTeamAccess() {
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session) return { canRead: false, canWrite: false };
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role, ai_tools_access')
+			.eq('id', session.user.id)
+			.single();
+		if (!profile) return { canRead: false, canWrite: false };
+		const allowed = profile.role === 'admin' || profile.ai_tools_access === true;
+		return { canRead: allowed, canWrite: allowed };
+	}
+
+	let teamMembersCache = null;
+	async function loadTeamMembers() {
+		if (teamMembersCache) return teamMembersCache;
+		const { data, error } = await supabase.rpc('list_team_members');
+		teamMembersCache = error ? [] : data;
+		return teamMembersCache;
+	}
 
 	checkAccessAndInit();
 
@@ -101,7 +180,11 @@ const { title, genre, stage } = project.data;
 		initRecordTab();
 		initAnalyzeTab();
 		initImageTab();
+		initChecklistTab();
+		initCommentsTab();
+		loadActivity();
 		loadTranscripts();
+		loadSavedReferences();
 	}
 
 	// ---- tabs ----
@@ -111,6 +194,9 @@ const { title, genre, stage } = project.data;
 			record: document.getElementById('panel-record'),
 			analyze: document.getElementById('panel-analyze'),
 			image: document.getElementById('panel-image'),
+			checklist: document.getElementById('panel-checklist'),
+			comments: document.getElementById('panel-comments'),
+			activity: document.getElementById('panel-activity'),
 		};
 		tabButtons.forEach((btn) => {
 			btn.addEventListener('click', () => {
@@ -408,10 +494,30 @@ const { title, genre, stage } = project.data;
 				refResult.innerHTML = `
 					<span class="badge">엔진: ${data.engine}</span>
 					<h3>추천 레퍼런스 작품 (${refs.length}편)</h3>
-					${refs.length ? `<ul class="issues plain">${refs.map((r) => `<li><strong>${r.title}</strong>${r.year ? ` (${r.year})` : ''} · ${r.type || ''}<div class="hint">${r.reason || ''}</div></li>`).join('')}</ul>` : `<p class="hint">추천 결과가 없습니다.</p>`}
+					${refs.length ? `<ul class="issues plain">${refs.map((r, i) => `<li data-ref-idx="${i}"><strong>${r.title}</strong>${r.year ? ` (${r.year})` : ''} · ${r.type || ''}<div class="hint">${r.reason || ''}</div><button type="button" class="save-ref-btn" data-idx="${i}">이 프로젝트에 저장</button></li>`).join('')}</ul>` : `<p class="hint">추천 결과가 없습니다.</p>`}
 					${data.detectedTags?.length ? `<p class="hint">감지된 키워드: ${data.detectedTags.join(', ')}</p>` : ''}
 					${data.engineError ? `<p class="error-box">LLM 호출 실패로 큐레이션 DB 매칭으로 대체됨: ${data.engineError}</p>` : ''}
 				`;
+				refResult.querySelectorAll('.save-ref-btn').forEach((saveBtn) => {
+					saveBtn.addEventListener('click', async () => {
+						const ref = refs[Number(saveBtn.dataset.idx)];
+						if (!ref) return;
+						saveBtn.disabled = true;
+						saveBtn.textContent = '저장 중...';
+						const { error } = await supabase.from('ip_project_references').insert({
+							project_id: projectId,
+							work_title: ref.title,
+							reason: ref.reason || '',
+						});
+						if (error) {
+							saveBtn.disabled = false;
+							saveBtn.textContent = `저장 실패 (${error.message})`;
+						} else {
+							saveBtn.textContent = '저장됨 ✓';
+							loadSavedReferences();
+						}
+					});
+				});
 			} catch (err) {
 				refResult.hidden = false;
 				refResult.innerHTML = `<p class="error-box">오류: ${err.message}</p>`;
@@ -420,6 +526,51 @@ const { title, genre, stage } = project.data;
 				btn.textContent = '레퍼런스 작품 추천받기';
 			}
 		});
+	}
+
+	async function loadSavedReferences() {
+		const list = document.getElementById('saved-ref-list');
+		if (!list) return;
+
+		const access = await loadTeamAccess();
+		if (!access.canRead) {
+			list.innerHTML = requestAccessHtml('로그인한 팀원 중 권한을 부여받은 분만 저장된 레퍼런스를 볼 수 있습니다.');
+			return;
+		}
+
+		const { data, error } = await supabase
+			.from('ip_project_references')
+			.select('*')
+			.eq('project_id', projectId)
+			.order('created_at', { ascending: false });
+
+		if (error) {
+			list.innerHTML = `<p class="error-box">오류: ${error.message}</p>`;
+			return;
+		}
+		if (!data || data.length === 0) {
+			list.innerHTML = `<p class="hint">아직 저장된 레퍼런스가 없습니다.</p>`;
+			return;
+		}
+
+		list.innerHTML = data.map((r) => `
+			<div class="list-item" data-id="${r.id}">
+				<span class="item-title">
+					${escapeHtml(r.work_title)}
+					${r.reason ? `<span class="item-text">${escapeHtml(r.reason)}</span>` : ''}
+				</span>
+				${access.canWrite ? `<span class="item-actions"><button class="delete-btn saved-ref-delete-btn" data-id="${r.id}">삭제</button></span>` : ''}
+			</div>
+		`).join('');
+
+		if (access.canWrite) {
+			list.querySelectorAll('.saved-ref-delete-btn').forEach((btn) => {
+				btn.addEventListener('click', async () => {
+					await supabase.from('ip_project_references').delete().eq('id', btn.dataset.id);
+					loadSavedReferences();
+				});
+			});
+		}
 	}
 
 	// ---- image tab ----
@@ -448,6 +599,244 @@ const { title, genre, stage } = project.data;
 				btn.textContent = '컨셉 이미지 생성';
 			}
 		});
+	}
+
+	// ---- checklist tab ----
+	function assigneeOptionsHtml(members, selectedId) {
+		return `<option value="">미지정</option>` + members.map((m) =>
+			`<option value="${m.id}" ${m.id === selectedId ? 'selected' : ''}>${escapeHtml(m.name || m.username || '이름없음')}</option>`
+		).join('');
+	}
+
+	async function initChecklistTab() {
+		loadChecklist();
+		const members = await loadTeamMembers();
+		const assigneeSelect = document.getElementById('task-assignee');
+		if (assigneeSelect) assigneeSelect.innerHTML = assigneeOptionsHtml(members, '');
+
+		document.getElementById('task-add-btn')?.addEventListener('click', async () => {
+			const input = document.getElementById('task-input');
+			const title = input.value.trim();
+			if (!title) return;
+			const assigneeId = document.getElementById('task-assignee')?.value || null;
+			const btn = document.getElementById('task-add-btn');
+			btn.disabled = true;
+			const { error } = await supabase.from('ip_project_tasks').insert({ project_id: projectId, title, assignee_id: assigneeId });
+			btn.disabled = false;
+			if (error) {
+				alert(`추가 실패: ${error.message}`);
+				return;
+			}
+			input.value = '';
+			if (assigneeSelect) assigneeSelect.value = '';
+			loadChecklist();
+		});
+	}
+
+	async function loadChecklist() {
+		const list = document.getElementById('task-list');
+		const addRow = document.getElementById('task-add-row');
+		const addActions = document.getElementById('task-add-actions');
+		if (!list) return;
+
+		const access = await loadTeamAccess();
+
+		if (addRow) addRow.style.display = access.canWrite ? '' : 'none';
+		if (addActions) addActions.style.display = access.canWrite ? '' : 'none';
+
+		if (!access.canRead) {
+			list.innerHTML = requestAccessHtml('로그인한 팀원 중 권한을 부여받은 분만 체크리스트를 볼 수 있습니다.');
+			return;
+		}
+
+		const { data, error } = await supabase
+			.from('ip_project_tasks')
+			.select('*')
+			.eq('project_id', projectId)
+			.order('sort_order', { ascending: true })
+			.order('created_at', { ascending: true });
+
+		if (error) {
+			list.innerHTML = `<p class="error-box">오류: ${error.message}</p>`;
+			return;
+		}
+		if (!data || data.length === 0) {
+			list.innerHTML = `<p class="hint">아직 등록된 할 일이 없습니다.</p>`;
+			return;
+		}
+
+		const members = await loadTeamMembers();
+		const memberName = (id) => members.find((m) => m.id === id)?.name || members.find((m) => m.id === id)?.username;
+
+		list.innerHTML = data.map((t) => `
+			<div class="list-item task-item" data-id="${t.id}">
+				<label class="task-label">
+					<input type="checkbox" class="task-check" data-id="${t.id}" ${t.is_done ? 'checked' : ''} ${access.canWrite ? '' : 'disabled'} />
+					<span class="${t.is_done ? 'done' : ''}">${escapeHtml(t.title)}</span>
+				</label>
+				<span class="item-actions">
+					${access.canWrite
+						? `<select class="task-assignee-select" data-id="${t.id}">${assigneeOptionsHtml(members, t.assignee_id)}</select>`
+						: `<span class="assignee-badge">${t.assignee_id ? escapeHtml(memberName(t.assignee_id) || '담당자') : '미지정'}</span>`}
+					${access.canWrite ? `<button class="delete-btn task-delete-btn" data-id="${t.id}">삭제</button>` : ''}
+				</span>
+			</div>
+		`).join('');
+
+		if (access.canWrite) {
+			list.querySelectorAll('.task-check').forEach((cb) => {
+				cb.addEventListener('change', async () => {
+					await supabase.from('ip_project_tasks').update({ is_done: cb.checked }).eq('id', cb.dataset.id);
+					loadChecklist();
+				});
+			});
+			list.querySelectorAll('.task-delete-btn').forEach((btn) => {
+				btn.addEventListener('click', async () => {
+					await supabase.from('ip_project_tasks').delete().eq('id', btn.dataset.id);
+					loadChecklist();
+				});
+			});
+			list.querySelectorAll('.task-assignee-select').forEach((sel) => {
+				sel.addEventListener('change', async () => {
+					await supabase.from('ip_project_tasks').update({ assignee_id: sel.value || null }).eq('id', sel.dataset.id);
+					loadChecklist();
+				});
+			});
+		}
+	}
+
+	// ---- comments tab ----
+	function initCommentsTab() {
+		loadComments();
+		document.getElementById('comment-add-btn')?.addEventListener('click', async () => {
+			const input = document.getElementById('comment-input');
+			const content = input.value.trim();
+			if (!content) return;
+			const btn = document.getElementById('comment-add-btn');
+			btn.disabled = true;
+			btn.textContent = '등록 중...';
+			const { error } = await supabase.rpc('create_project_comment', {
+				p_project_id: projectId,
+				p_content: content,
+			});
+			btn.disabled = false;
+			btn.textContent = '댓글 등록';
+			if (error) {
+				alert(`등록 실패: ${error.message}`);
+				return;
+			}
+			input.value = '';
+			loadComments();
+		});
+	}
+
+	async function loadComments() {
+		const list = document.getElementById('comment-list');
+		const addRow = document.getElementById('comment-add-row');
+		const addActions = document.getElementById('comment-add-actions');
+		if (!list) return;
+
+		const access = await loadTeamAccess();
+		if (addRow) addRow.style.display = access.canWrite ? '' : 'none';
+		if (addActions) addActions.style.display = access.canWrite ? '' : 'none';
+
+		if (!access.canRead) {
+			list.innerHTML = requestAccessHtml('로그인한 팀원 중 권한을 부여받은 분만 댓글을 볼 수 있습니다.');
+			return;
+		}
+
+		const { data: { session } } = await supabase.auth.getSession();
+		const myId = session?.user?.id;
+
+		const [{ data, error }, members] = await Promise.all([
+			supabase.from('ip_project_comments').select('*').eq('project_id', projectId).order('created_at', { ascending: false }),
+			loadTeamMembers(),
+		]);
+
+		if (error) {
+			list.innerHTML = `<p class="error-box">오류: ${error.message}</p>`;
+			return;
+		}
+		if (!data || data.length === 0) {
+			list.innerHTML = `<p class="hint">아직 댓글이 없습니다.</p>`;
+			return;
+		}
+
+		const authorName = (id) => {
+			const m = members.find((m) => m.id === id);
+			return m ? (m.name || m.username || '팀원') : '팀원';
+		};
+
+		list.innerHTML = data.map((c) => `
+			<div class="list-item" data-id="${c.id}">
+				<span class="item-title">
+					${escapeHtml(authorName(c.user_id))}
+					<small class="item-meta">${new Date(c.created_at).toLocaleString('ko-KR')}</small>
+					<span class="item-text">${escapeHtml(c.content)}</span>
+				</span>
+				${c.user_id === myId ? `<span class="item-actions"><button class="delete-btn comment-delete-btn" data-id="${c.id}">삭제</button></span>` : ''}
+			</div>
+		`).join('');
+
+		list.querySelectorAll('.comment-delete-btn').forEach((btn) => {
+			btn.addEventListener('click', async () => {
+				await supabase.from('ip_project_comments').delete().eq('id', btn.dataset.id);
+				loadComments();
+			});
+		});
+	}
+
+	// ---- activity log tab ----
+	const ACTIVITY_LABELS = {
+		stage_changed: (detail) => `단계가 변경되었습니다 (${escapeHtml(detail)})`,
+		task_created: (detail) => `할 일 추가: ${escapeHtml(detail)}`,
+		task_completed: (detail) => `할 일 완료: ${escapeHtml(detail)}`,
+		task_reopened: (detail) => `할 일 다시 열림: ${escapeHtml(detail)}`,
+		task_deleted: (detail) => `할 일 삭제: ${escapeHtml(detail)}`,
+		comment_added: (detail) => `댓글 작성: ${escapeHtml(detail)}`,
+		reference_saved: (detail) => `레퍼런스 저장: ${escapeHtml(detail)}`,
+	};
+
+	async function loadActivity() {
+		const list = document.getElementById('activity-list');
+		if (!list) return;
+
+		const access = await loadTeamAccess();
+		if (!access.canRead) {
+			list.innerHTML = requestAccessHtml('로그인한 팀원 중 권한을 부여받은 분만 활동 기록을 볼 수 있습니다.');
+			return;
+		}
+
+		const [{ data, error }, members] = await Promise.all([
+			supabase.from('ip_project_activity_log').select('*').eq('project_id', projectId).order('created_at', { ascending: false }).limit(50),
+			loadTeamMembers(),
+		]);
+
+		if (error) {
+			list.innerHTML = `<p class="error-box">오류: ${error.message}</p>`;
+			return;
+		}
+		if (!data || data.length === 0) {
+			list.innerHTML = `<p class="hint">아직 활동 기록이 없습니다.</p>`;
+			return;
+		}
+
+		const actorName = (id) => {
+			const m = members.find((m) => m.id === id);
+			return m ? (m.name || m.username || '팀원') : '팀원';
+		};
+
+		list.innerHTML = data.map((a) => {
+			const describe = ACTIVITY_LABELS[a.action] || (() => escapeHtml(a.action));
+			return `
+				<div class="list-item">
+					<span class="item-title">
+						${escapeHtml(actorName(a.actor_id))} · ${describe(a.detail)}
+						<small class="item-meta">${new Date(a.created_at).toLocaleString('ko-KR')}</small>
+					</span>
+				</div>
+			`;
+		}).join('');
 	}
 </script>
 
@@ -755,5 +1144,66 @@ const { title, genre, stage } = project.data;
 		border-radius: 8px;
 		border: 1px solid var(--border);
 		margin-top: 0.6rem;
+	}
+
+	.task-item {
+		align-items: center;
+	}
+	.task-label {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		flex: 1;
+		cursor: pointer;
+	}
+	.task-label input[type='checkbox'] {
+		width: 1.1rem;
+		height: 1.1rem;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+	.task-label .done {
+		text-decoration: line-through;
+		color: var(--muted);
+	}
+	.task-item .item-actions {
+		flex-direction: row;
+		align-items: center;
+	}
+	.task-assignee-select {
+		font: inherit;
+		font-size: 0.8rem;
+		padding: 0.3rem 0.5rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--fg);
+	}
+	.assignee-badge {
+		font-size: 0.8rem;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+	.save-ref-btn {
+		font: inherit;
+		margin-top: 0.5rem;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--accent);
+		border-radius: 4px;
+		background: none;
+		color: var(--heading);
+		cursor: pointer;
+		font-size: 0.8rem;
+	}
+	.save-ref-btn:hover {
+		background: var(--accent-dim);
+	}
+	.save-ref-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+	.tools-section ul.issues.plain li {
+		list-style: none;
+		margin-bottom: 0.9rem;
 	}
 </style>

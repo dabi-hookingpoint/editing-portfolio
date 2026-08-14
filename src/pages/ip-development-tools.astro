@@ -5,6 +5,18 @@ import { getCollection } from 'astro:content';
 const projects = (await getCollection('ipProjects')).sort(
 	(a, b) => (a.data.sortOrder ?? 0) - (b.data.sortOrder ?? 0)
 );
+
+const STAGES = ['기획', '트리트먼트', '대본', '개발', '피칭'];
+
+const projectsData = projects.map((p) => ({
+	id: p.id,
+	title: p.data.title,
+	genre: p.data.genre,
+	stage: p.data.stage,
+	year: p.data.year ?? null,
+	targetDate: p.data.targetDate ?? null,
+	sortOrder: p.data.sortOrder ?? 0,
+}));
 ---
 
 <Layout title="IP DEVELOPMENT — Hooking Point">
@@ -19,21 +31,187 @@ const projects = (await getCollection('ipProjects')).sort(
 	<div class="page">
 		<p class="intro">프로젝트별 AI 제작 도구입니다. 회의 녹음/자동 요약, 시나리오 3막 구조 분석, 레퍼런스 추천, 컨셉 이미지 생성을 프로젝트마다 로그인 없이 바로 사용할 수 있습니다.</p>
 
-		<ul class="ip-grid">
-			{projects.map((p) => (
-				<li>
-					<a class="ip-card" href={`/ip-development-tools/${p.id}`}>
-						<span class="stage-badge">{p.data.stage}</span>
-						<span class="ip-title">{p.data.title}</span>
-						<span class="ip-genre">{p.data.genre}</span>
-					</a>
-				</li>
-			))}
-		</ul>
+		<nav class="view-tabs" role="tablist">
+			<button type="button" data-view="list" class="view-tab active">목록</button>
+			<button type="button" data-view="board" class="view-tab">보드</button>
+			<button type="button" data-view="timeline" class="view-tab">타임라인</button>
+		</nav>
+
+		<div class="toolbar">
+			<input type="text" id="ip-search" placeholder="제목·장르 검색" />
+			<select id="ip-sort">
+				<option value="sortOrder">정렬 순서</option>
+				<option value="year-desc">연도 최신순</option>
+				<option value="year-asc">연도 오래된순</option>
+				<option value="title">제목 가나다순</option>
+			</select>
+			<div class="stage-filters" id="ip-stage-filters">
+				<button type="button" class="stage-filter active" data-stage="전체">전체</button>
+				{STAGES.map((s) => (
+					<button type="button" class="stage-filter" data-stage={s}>{s}</button>
+				))}
+			</div>
+		</div>
+
+		<div id="view-list" class="view-panel active"></div>
+		<div id="view-board" class="view-panel"></div>
+		<div id="view-timeline" class="view-panel"></div>
+
+		<script type="application/json" id="ip-projects-data" set:html={JSON.stringify(projectsData)} />
 	</div>
 </Layout>
 
-<style>
+<script>
+	const STAGES = ['기획', '트리트먼트', '대본', '개발', '피칭'];
+	const projects = JSON.parse(document.getElementById('ip-projects-data')?.textContent || '[]');
+
+	let currentView = 'list';
+	let currentStage = '전체';
+	let currentSort = 'sortOrder';
+	let currentSearch = '';
+
+	function escapeHtml(s) {
+		return String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+	}
+
+	function getFiltered() {
+		let list = projects.filter((p) => currentStage === '전체' || p.stage === currentStage);
+		if (currentSearch.trim()) {
+			const q = currentSearch.trim().toLowerCase();
+			list = list.filter((p) => p.title.toLowerCase().includes(q) || p.genre.toLowerCase().includes(q));
+		}
+		list = [...list];
+		if (currentSort === 'year-desc') list.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
+		else if (currentSort === 'year-asc') list.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
+		else if (currentSort === 'title') list.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+		else list.sort((a, b) => a.sortOrder - b.sortOrder);
+		return list;
+	}
+
+	function cardHtml(p) {
+		return `
+			<a class="ip-card" href="/ip-development-tools/${p.id}">
+				<span class="stage-badge">${escapeHtml(p.stage)}</span>
+				<span class="ip-title">${escapeHtml(p.title)}</span>
+				<span class="ip-genre">${escapeHtml(p.genre)}</span>
+			</a>
+		`;
+	}
+
+	function renderList() {
+		const el = document.getElementById('view-list');
+		const list = getFiltered();
+		el.innerHTML = list.length
+			? `<ul class="ip-grid">${list.map((p) => `<li>${cardHtml(p)}</li>`).join('')}</ul>`
+			: `<p class="hint">조건에 맞는 프로젝트가 없습니다.</p>`;
+	}
+
+	function renderBoard() {
+		const el = document.getElementById('view-board');
+		const list = getFiltered();
+		el.innerHTML = `
+			<div class="board">
+				${STAGES.map((stage) => {
+					const items = list.filter((p) => p.stage === stage);
+					return `
+						<div class="board-col">
+							<h3>${stage} <span class="board-count">${items.length}</span></h3>
+							<div class="board-items">
+								${items.map((p) => `
+									<a class="board-card" href="/ip-development-tools/${p.id}">
+										<span class="ip-title">${escapeHtml(p.title)}</span>
+										<span class="ip-genre">${escapeHtml(p.genre)}</span>
+									</a>
+								`).join('') || `<p class="hint">없음</p>`}
+							</div>
+						</div>
+					`;
+				}).join('')}
+			</div>
+		`;
+	}
+
+	function renderTimeline() {
+		const el = document.getElementById('view-timeline');
+		const list = getFiltered();
+		const withDate = list.filter((p) => p.targetDate).sort((a, b) => a.targetDate.localeCompare(b.targetDate));
+		const withoutDate = list.filter((p) => !p.targetDate);
+
+		const groups = new Map();
+		withDate.forEach((p) => {
+			const key = p.targetDate.slice(0, 7);
+			if (!groups.has(key)) groups.set(key, []);
+			groups.get(key).push(p);
+		});
+
+		const groupHtml = [...groups.entries()].map(([month, items]) => `
+			<div class="timeline-group">
+				<h3>${month.replace('-', '년 ')}월</h3>
+				${items.map((p) => `
+					<a class="timeline-item" href="/ip-development-tools/${p.id}">
+						<span class="timeline-date">${p.targetDate}</span>
+						<span class="stage-badge">${escapeHtml(p.stage)}</span>
+						<span class="ip-title">${escapeHtml(p.title)}</span>
+					</a>
+				`).join('')}
+			</div>
+		`).join('');
+
+		const unscheduledHtml = withoutDate.length ? `
+			<div class="timeline-group">
+				<h3>목표일 미정</h3>
+				${withoutDate.map((p) => `
+					<a class="timeline-item" href="/ip-development-tools/${p.id}">
+						<span class="timeline-date">-</span>
+						<span class="stage-badge">${escapeHtml(p.stage)}</span>
+						<span class="ip-title">${escapeHtml(p.title)}</span>
+					</a>
+				`).join('')}
+			</div>
+		` : '';
+
+		el.innerHTML = (groupHtml + unscheduledHtml) || `<p class="hint">조건에 맞는 프로젝트가 없습니다.</p>`;
+	}
+
+	function renderAll() {
+		renderList();
+		renderBoard();
+		renderTimeline();
+	}
+
+	document.querySelectorAll('.view-tab').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			document.querySelectorAll('.view-tab').forEach((b) => b.classList.remove('active'));
+			btn.classList.add('active');
+			currentView = btn.dataset.view;
+			document.querySelectorAll('.view-panel').forEach((p) => p.classList.remove('active'));
+			document.getElementById(`view-${currentView}`)?.classList.add('active');
+		});
+	});
+
+	document.querySelectorAll('.stage-filter').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			document.querySelectorAll('.stage-filter').forEach((b) => b.classList.remove('active'));
+			btn.classList.add('active');
+			currentStage = btn.dataset.stage;
+			renderAll();
+		});
+	});
+
+	document.getElementById('ip-sort')?.addEventListener('change', (e) => {
+		currentSort = e.target.value;
+		renderAll();
+	});
+
+	document.getElementById('ip-search')?.addEventListener('input', (e) => {
+		currentSearch = e.target.value;
+		renderAll();
+	});
+
+	renderAll();
+</script>
+
+<style is:global>
 	.hero-band {
 		position: relative;
 		overflow: hidden;
@@ -75,7 +253,85 @@ const projects = (await getCollection('ipProjects')).sort(
 	.intro {
 		color: var(--muted);
 		max-width: 40rem;
-		margin: 0 0 2.5rem;
+		margin: 0 0 2rem;
+	}
+
+	.view-tabs {
+		display: flex;
+		gap: 0.3rem;
+		border-bottom: 1px solid var(--border);
+		margin-bottom: 1.5rem;
+	}
+	.view-tab {
+		font: inherit;
+		border: none;
+		background: none;
+		color: var(--muted);
+		padding: 0.6rem 0.9rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		border-bottom: 2px solid transparent;
+	}
+	.view-tab.active {
+		color: var(--heading);
+		border-bottom-color: var(--accent);
+	}
+
+	.toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+	.toolbar input,
+	.toolbar select {
+		font: inherit;
+		font-size: 0.85rem;
+		padding: 0.5rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--surface);
+		color: var(--fg);
+	}
+	.toolbar input {
+		min-width: 200px;
+	}
+	.stage-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+	.stage-filter {
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		background: none;
+		border: none;
+		color: var(--muted);
+		border-radius: 999px;
+		padding: 0.4rem 0.9rem;
+		cursor: pointer;
+	}
+	.stage-filter:hover {
+		color: var(--heading);
+	}
+	.stage-filter.active {
+		background: var(--surface-strong);
+		color: var(--heading);
+	}
+
+	.view-panel {
+		display: none;
+	}
+	.view-panel.active {
+		display: block;
+	}
+
+	.hint {
+		color: var(--muted);
+		font-size: 0.9rem;
 	}
 
 	.ip-grid {
@@ -126,5 +382,83 @@ const projects = (await getCollection('ipProjects')).sort(
 	.ip-genre {
 		font-size: 0.85rem;
 		color: var(--muted);
+	}
+
+	.board {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(180px, 1fr));
+		gap: 1rem;
+		overflow-x: auto;
+	}
+	.board-col h3 {
+		font-size: 0.85rem;
+		color: var(--heading);
+		margin: 0 0 0.8rem;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.board-count {
+		font-size: 0.7rem;
+		font-weight: 400;
+		color: var(--muted);
+	}
+	.board-items {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.board-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 0.8rem;
+		color: inherit;
+		transition: border-color 0.15s ease;
+	}
+	.board-card:hover {
+		border-color: var(--accent);
+	}
+	.board-card .ip-title {
+		font-size: 0.85rem;
+		margin: 0;
+	}
+	.board-card .ip-genre {
+		font-size: 0.75rem;
+	}
+
+	.timeline-group {
+		margin-bottom: 1.8rem;
+	}
+	.timeline-group h3 {
+		font-size: 0.9rem;
+		color: var(--heading);
+		margin: 0 0 0.7rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.timeline-item {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		padding: 0.6rem 0;
+		color: inherit;
+		border-bottom: 1px dashed var(--border);
+	}
+	.timeline-item:last-child {
+		border-bottom: none;
+	}
+	.timeline-item:hover .ip-title {
+		color: var(--accent);
+	}
+	.timeline-date {
+		font-size: 0.8rem;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+		flex-shrink: 0;
+		width: 5.5rem;
 	}
 </style>
