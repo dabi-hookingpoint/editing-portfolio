@@ -96,7 +96,10 @@ const currentPath = Astro.url.pathname;
 				background: var(--bg);
 				color: var(--fg);
 				padding-left: 64px;
-				cursor: url('/images/brand/cursor-symbol.svg') 16 15, auto;
+				cursor: url('/images/brand/cursor-clapperboard-open.png') 3 3, auto;
+			}
+			body.clapper-closed {
+				cursor: url('/images/brand/cursor-clapperboard-closed.png') 3 3, auto;
 			}
 			.icon-rail {
 				position: fixed;
@@ -544,6 +547,9 @@ const currentPath = Astro.url.pathname;
 			});
 
 			updateNav();
+
+			document.addEventListener('mousedown', () => document.body.classList.add('clapper-closed'));
+			document.addEventListener('mouseup', () => document.body.classList.remove('clapper-closed'));
 
 			logoutLinks.forEach((el) => {
 				el.addEventListener('click', async (e) => {
