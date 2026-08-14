@@ -551,8 +551,23 @@ const currentPath = Astro.url.pathname;
 
 			updateNav();
 
-			document.addEventListener('mousedown', () => document.body.classList.add('clapper-closed'));
-			document.addEventListener('mouseup', () => document.body.classList.remove('clapper-closed'));
+			let clapperOpenTimer = null;
+			const MIN_CLOSED_MS = 150;
+
+			document.addEventListener('mousedown', () => {
+				if (clapperOpenTimer) {
+					clearTimeout(clapperOpenTimer);
+					clapperOpenTimer = null;
+				}
+				document.body.classList.add('clapper-closed');
+			});
+
+			document.addEventListener('mouseup', () => {
+				clapperOpenTimer = setTimeout(() => {
+					document.body.classList.remove('clapper-closed');
+					clapperOpenTimer = null;
+				}, MIN_CLOSED_MS);
+			});
 
 			logoutLinks.forEach((el) => {
 				el.addEventListener('click', async (e) => {
