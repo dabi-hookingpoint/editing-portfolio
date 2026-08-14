@@ -101,6 +101,9 @@ const currentPath = Astro.url.pathname;
 			body.clapper-closed {
 				cursor: url('/images/brand/cursor-clapperboard-closed.png') 3 3, auto;
 			}
+			body *, body *::before, body *::after {
+				cursor: inherit !important;
+			}
 			.icon-rail {
 				position: fixed;
 				top: 0;
