@@ -30,6 +30,7 @@ const { title, genre, stage } = project.data;
 				<button type="button" data-tab="checklist" class="tab-btn">④ 체크리스트</button>
 				<button type="button" data-tab="comments" class="tab-btn">⑤ 댓글</button>
 				<button type="button" data-tab="activity" class="tab-btn">⑥ 활동 기록</button>
+				<button type="button" data-tab="calendar" class="tab-btn">⑦ 캘린더</button>
 			</nav>
 
 			<section class="tool-panel active" id="panel-record">
@@ -87,10 +88,28 @@ const { title, genre, stage } = project.data;
 			<section class="tool-panel" id="panel-checklist">
 				<div class="tool-card">
 					<h2>체크리스트</h2>
+					<nav class="audience-filters" id="task-audience-filters">
+						<button type="button" class="audience-filter active" data-audience="전체">전체</button>
+						<button type="button" class="audience-filter" data-audience="general">공통</button>
+						<button type="button" class="audience-filter" data-audience="director">감독용</button>
+						<button type="button" class="audience-filter" data-audience="production">제작사용</button>
+					</nav>
 					<div class="form-row" id="task-add-row" style="display: none;">
 						<div class="field" style="flex: 3;">
 							<label for="task-input">할 일</label>
 							<input type="text" id="task-input" placeholder="예: 트리트먼트 2차 수정" />
+						</div>
+						<div class="field">
+							<label for="task-audience">구분</label>
+							<select id="task-audience">
+								<option value="general">공통</option>
+								<option value="director">감독용</option>
+								<option value="production">제작사용</option>
+							</select>
+						</div>
+						<div class="field">
+							<label for="task-due-date">기한</label>
+							<input type="date" id="task-due-date" />
 						</div>
 						<div class="field">
 							<label for="task-assignee">담당자</label>
@@ -126,6 +145,14 @@ const { title, genre, stage } = project.data;
 					<h2>활동 기록</h2>
 					<p class="hint">단계 변경, 할 일 생성/완료/삭제, 댓글, 레퍼런스 저장이 자동으로 기록됩니다.</p>
 					<div id="activity-list"></div>
+				</div>
+			</section>
+
+			<section class="tool-panel" id="panel-calendar">
+				<div class="tool-card">
+					<h2>캘린더</h2>
+					<p class="hint">체크리스트에 기한을 설정한 항목과 이 프로젝트의 목표일을 달력순으로 모아봅니다. 기한은 "④ 체크리스트" 탭에서 설정하세요.</p>
+					<div id="calendar-list"></div>
 				</div>
 			</section>
 		</section>
@@ -183,6 +210,7 @@ const { title, genre, stage } = project.data;
 		initChecklistTab();
 		initCommentsTab();
 		loadActivity();
+		loadCalendar();
 		loadTranscripts();
 		loadSavedReferences();
 	}
@@ -197,6 +225,7 @@ const { title, genre, stage } = project.data;
 			checklist: document.getElementById('panel-checklist'),
 			comments: document.getElementById('panel-comments'),
 			activity: document.getElementById('panel-activity'),
+			calendar: document.getElementById('panel-calendar'),
 		};
 		tabButtons.forEach((btn) => {
 			btn.addEventListener('click', () => {
@@ -602,6 +631,9 @@ const { title, genre, stage } = project.data;
 	}
 
 	// ---- checklist tab ----
+	const AUDIENCE_LABELS = { general: '공통', director: '감독용', production: '제작사용' };
+	let currentTaskAudience = '전체';
+
 	function assigneeOptionsHtml(members, selectedId) {
 		return `<option value="">미지정</option>` + members.map((m) =>
 			`<option value="${m.id}" ${m.id === selectedId ? 'selected' : ''}>${escapeHtml(m.name || m.username || '이름없음')}</option>`
@@ -614,22 +646,41 @@ const { title, genre, stage } = project.data;
 		const assigneeSelect = document.getElementById('task-assignee');
 		if (assigneeSelect) assigneeSelect.innerHTML = assigneeOptionsHtml(members, '');
 
+		document.querySelectorAll('.audience-filter').forEach((btn) => {
+			btn.addEventListener('click', () => {
+				document.querySelectorAll('.audience-filter').forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				currentTaskAudience = btn.dataset.audience;
+				loadChecklist();
+			});
+		});
+
 		document.getElementById('task-add-btn')?.addEventListener('click', async () => {
 			const input = document.getElementById('task-input');
 			const title = input.value.trim();
 			if (!title) return;
+			const audience = document.getElementById('task-audience')?.value || 'general';
+			const dueDate = document.getElementById('task-due-date')?.value || null;
 			const assigneeId = document.getElementById('task-assignee')?.value || null;
 			const btn = document.getElementById('task-add-btn');
 			btn.disabled = true;
-			const { error } = await supabase.from('ip_project_tasks').insert({ project_id: projectId, title, assignee_id: assigneeId });
+			const { error } = await supabase.from('ip_project_tasks').insert({
+				project_id: projectId,
+				title,
+				audience,
+				due_date: dueDate,
+				assignee_id: assigneeId,
+			});
 			btn.disabled = false;
 			if (error) {
 				alert(`추가 실패: ${error.message}`);
 				return;
 			}
 			input.value = '';
+			document.getElementById('task-due-date').value = '';
 			if (assigneeSelect) assigneeSelect.value = '';
 			loadChecklist();
+			loadCalendar();
 		});
 	}
 
@@ -660,7 +711,10 @@ const { title, genre, stage } = project.data;
 			list.innerHTML = `<p class="error-box">오류: ${error.message}</p>`;
 			return;
 		}
-		if (!data || data.length === 0) {
+
+		const filtered = currentTaskAudience === '전체' ? data : (data || []).filter((t) => t.audience === currentTaskAudience);
+
+		if (!filtered || filtered.length === 0) {
 			list.innerHTML = `<p class="hint">아직 등록된 할 일이 없습니다.</p>`;
 			return;
 		}
@@ -668,11 +722,13 @@ const { title, genre, stage } = project.data;
 		const members = await loadTeamMembers();
 		const memberName = (id) => members.find((m) => m.id === id)?.name || members.find((m) => m.id === id)?.username;
 
-		list.innerHTML = data.map((t) => `
+		list.innerHTML = filtered.map((t) => `
 			<div class="list-item task-item" data-id="${t.id}">
 				<label class="task-label">
 					<input type="checkbox" class="task-check" data-id="${t.id}" ${t.is_done ? 'checked' : ''} ${access.canWrite ? '' : 'disabled'} />
+					<span class="audience-badge audience-${t.audience}">${AUDIENCE_LABELS[t.audience] || t.audience}</span>
 					<span class="${t.is_done ? 'done' : ''}">${escapeHtml(t.title)}</span>
+					${t.due_date ? `<span class="due-badge">~${t.due_date}</span>` : ''}
 				</label>
 				<span class="item-actions">
 					${access.canWrite
@@ -694,6 +750,7 @@ const { title, genre, stage } = project.data;
 				btn.addEventListener('click', async () => {
 					await supabase.from('ip_project_tasks').delete().eq('id', btn.dataset.id);
 					loadChecklist();
+					loadCalendar();
 				});
 			});
 			list.querySelectorAll('.task-assignee-select').forEach((sel) => {
@@ -703,6 +760,63 @@ const { title, genre, stage } = project.data;
 				});
 			});
 		}
+	}
+
+	// ---- calendar tab ----
+	async function loadCalendar() {
+		const list = document.getElementById('calendar-list');
+		if (!list) return;
+
+		const access = await loadTeamAccess();
+		if (!access.canRead) {
+			list.innerHTML = requestAccessHtml('로그인한 팀원 중 권한을 부여받은 분만 캘린더를 볼 수 있습니다.');
+			return;
+		}
+
+		const [{ data: tasks, error }, { data: project }] = await Promise.all([
+			supabase.from('ip_project_tasks').select('*').eq('project_id', projectId).not('due_date', 'is', null).order('due_date', { ascending: true }),
+			supabase.from('ip_projects').select('target_date').eq('id', projectId).maybeSingle(),
+		]);
+
+		if (error) {
+			list.innerHTML = `<p class="error-box">오류: ${error.message}</p>`;
+			return;
+		}
+
+		const entries = (tasks || []).map((t) => ({
+			date: t.due_date,
+			label: `${AUDIENCE_LABELS[t.audience] || t.audience} · ${t.title}`,
+			done: t.is_done,
+		}));
+		if (project?.target_date) {
+			entries.push({ date: project.target_date, label: '프로젝트 목표일', done: false, isMilestone: true });
+		}
+		entries.sort((a, b) => a.date.localeCompare(b.date));
+
+		if (entries.length === 0) {
+			list.innerHTML = `<p class="hint">기한이 설정된 할 일이나 목표일이 없습니다.</p>`;
+			return;
+		}
+
+		const groups = new Map();
+		entries.forEach((e) => {
+			const key = e.date.slice(0, 7);
+			if (!groups.has(key)) groups.set(key, []);
+			groups.get(key).push(e);
+		});
+
+		list.innerHTML = [...groups.entries()].map(([month, items]) => `
+			<div class="timeline-group">
+				<h3>${month.replace('-', '년 ')}월</h3>
+				${items.map((e) => `
+					<div class="timeline-item ${e.done ? 'done-row' : ''}">
+						<span class="timeline-date">${e.date}</span>
+						${e.isMilestone ? `<span class="audience-badge audience-milestone">목표일</span>` : ''}
+						<span class="${e.done ? 'done' : ''}">${escapeHtml(e.label)}</span>
+					</div>
+				`).join('')}
+			</div>
+		`).join('');
 	}
 
 	// ---- comments tab ----
@@ -1183,6 +1297,96 @@ const { title, genre, stage } = project.data;
 		font-size: 0.8rem;
 		color: var(--muted);
 		white-space: nowrap;
+	}
+
+	.audience-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 1.2rem;
+	}
+	.audience-filter {
+		font: inherit;
+		font-size: 0.8rem;
+		font-weight: 600;
+		background: none;
+		border: none;
+		color: var(--muted);
+		border-radius: 999px;
+		padding: 0.4rem 0.9rem;
+		cursor: pointer;
+	}
+	.audience-filter:hover {
+		color: var(--heading);
+	}
+	.audience-filter.active {
+		background: var(--surface-strong);
+		color: var(--heading);
+	}
+	.audience-badge {
+		display: inline-block;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.03em;
+		padding: 0.15rem 0.5rem;
+		border-radius: 999px;
+		flex-shrink: 0;
+	}
+	.audience-general {
+		color: var(--muted);
+		background: var(--surface-strong);
+	}
+	.audience-director {
+		color: var(--heading);
+		background: var(--accent-dim);
+		border: 1px solid var(--accent);
+	}
+	.audience-production {
+		color: #2e6b45;
+		background: rgba(46, 107, 69, 0.15);
+		border: 1px solid #2e6b45;
+	}
+	.audience-milestone {
+		color: #a13a2f;
+		background: rgba(161, 58, 47, 0.15);
+		border: 1px solid #a13a2f;
+	}
+	.due-badge {
+		font-size: 0.75rem;
+		color: var(--muted);
+		flex-shrink: 0;
+	}
+
+	#calendar-list .timeline-group {
+		margin-bottom: 1.5rem;
+	}
+	#calendar-list .timeline-group h3 {
+		font-size: 0.9rem;
+		color: var(--heading);
+		margin: 0 0 0.6rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--border);
+	}
+	#calendar-list .timeline-item {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.5rem 0;
+		border-bottom: 1px dashed var(--border);
+	}
+	#calendar-list .timeline-item:last-child {
+		border-bottom: none;
+	}
+	#calendar-list .timeline-item.done-row .done {
+		text-decoration: line-through;
+		color: var(--muted);
+	}
+	#calendar-list .timeline-date {
+		font-size: 0.8rem;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+		flex-shrink: 0;
+		width: 5.5rem;
 	}
 	.save-ref-btn {
 		font: inherit;
