@@ -11,7 +11,7 @@ export async function getStaticPaths() {
 
 const { id } = Astro.params;
 const work = await getEntry('works', id);
-const { title, releaseYear, editingApproach } = work.data;
+const { title, releaseYear, editingApproach, image } = work.data;
 
 // editingApproach supports a light markup: a lede line, "## " section
 // headings, "### " subheadings, blank-line-separated paragraphs, and
@@ -69,24 +69,53 @@ const firstParagraphIndex = blocks.findIndex((b) => b.type === 'p');
 <Layout title={`${title} 편집 로그 - 편집실 포트폴리오`}>
 	<div class="page">
 		<a class="back-link" href={`/works/${id}`}>← {title} 작품 상세로</a>
-		<article>
-			<h1>
-				<img class="log-symbol" src="/images/brand/symbol-white.svg" alt="" />
-				{title} <span class="year">({releaseYear})</span> 편집 로그
-			</h1>
-			{blocks.map((block, i) => {
-				if (block.type === 'h2') return <h2>{block.text}</h2>;
-				if (block.type === 'h3') return <h3>{block.text}</h3>;
-				if (block.type === 'ol') return <ol>{block.items.map((item) => <li>{item}</li>)}</ol>;
-				return <p class={i === firstParagraphIndex ? 'lede' : ''}>{block.text}</p>;
-			})}
-		</article>
+		<div class="log-layout">
+			<aside class="log-side">
+				<img class="log-poster" src={image} alt={title} />
+			</aside>
+			<article>
+				<h1>
+					<img class="log-symbol" src="/images/brand/symbol-white.svg" alt="" />
+					{title} <span class="year">({releaseYear})</span> 편집 로그
+				</h1>
+				{blocks.map((block, i) => {
+					if (block.type === 'h2') return <h2>{block.text}</h2>;
+					if (block.type === 'h3') return <h3>{block.text}</h3>;
+					if (block.type === 'ol') return <ol>{block.items.map((item) => <li>{item}</li>)}</ol>;
+					return <p class={i === firstParagraphIndex ? 'lede' : ''}>{block.text}</p>;
+				})}
+			</article>
+		</div>
 	</div>
 </Layout>
 
 <style>
+	.log-layout {
+		display: grid;
+		grid-template-columns: minmax(180px, 260px) minmax(0, 680px);
+		gap: 4rem;
+		align-items: start;
+		justify-content: start;
+	}
+	.log-poster {
+		width: 100%;
+		border-radius: 8px;
+		object-fit: cover;
+		position: sticky;
+		top: 2rem;
+	}
+	@media (max-width: 860px) {
+		.log-layout {
+			grid-template-columns: 1fr;
+		}
+		.log-poster {
+			max-width: 220px;
+			margin: 0 auto 2rem;
+			position: static;
+		}
+	}
 	article {
-		max-width: 640px;
+		max-width: 680px;
 	}
 	article h1 {
 		display: flex;
