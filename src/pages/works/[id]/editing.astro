@@ -12,6 +12,58 @@ export async function getStaticPaths() {
 const { id } = Astro.params;
 const work = await getEntry('works', id);
 const { title, releaseYear, editingApproach } = work.data;
+
+// editingApproach supports a light markup: a lede line, "## " section
+// headings, "### " subheadings, blank-line-separated paragraphs, and
+// consecutive "1. " lines as an ordered list.
+function parseEditingLog(text) {
+	const blocks = [];
+	let paragraph = [];
+	let listItems = [];
+
+	const flushParagraph = () => {
+		if (paragraph.length) {
+			blocks.push({ type: 'p', text: paragraph.join(' ') });
+			paragraph = [];
+		}
+	};
+	const flushList = () => {
+		if (listItems.length) {
+			blocks.push({ type: 'ol', items: listItems });
+			listItems = [];
+		}
+	};
+
+	for (const rawLine of text.split('\n')) {
+		const line = rawLine.trim();
+		if (line === '') {
+			flushParagraph();
+			flushList();
+			continue;
+		}
+		if (line.startsWith('## ')) {
+			flushParagraph();
+			flushList();
+			blocks.push({ type: 'h2', text: line.slice(3) });
+		} else if (line.startsWith('### ')) {
+			flushParagraph();
+			flushList();
+			blocks.push({ type: 'h3', text: line.slice(4) });
+		} else if (/^\d+\.\s/.test(line)) {
+			flushParagraph();
+			listItems.push(line.replace(/^\d+\.\s/, ''));
+		} else {
+			flushList();
+			paragraph.push(line);
+		}
+	}
+	flushParagraph();
+	flushList();
+	return blocks;
+}
+
+const blocks = parseEditingLog(editingApproach);
+const firstParagraphIndex = blocks.findIndex((b) => b.type === 'p');
 ---
 
 <Layout title={`${title} 편집 로그 - 편집실 포트폴리오`}>
@@ -22,18 +74,26 @@ const { title, releaseYear, editingApproach } = work.data;
 				<img class="log-symbol" src="/images/brand/symbol-white.svg" alt="" />
 				{title} <span class="year">({releaseYear})</span> 편집 로그
 			</h1>
-			<p>{editingApproach}</p>
+			{blocks.map((block, i) => {
+				if (block.type === 'h2') return <h2>{block.text}</h2>;
+				if (block.type === 'h3') return <h3>{block.text}</h3>;
+				if (block.type === 'ol') return <ol>{block.items.map((item) => <li>{item}</li>)}</ol>;
+				return <p class={i === firstParagraphIndex ? 'lede' : ''}>{block.text}</p>;
+			})}
 		</article>
 	</div>
 </Layout>
 
 <style>
+	article {
+		max-width: 700px;
+	}
 	article h1 {
 		display: flex;
 		align-items: center;
 		gap: 0.6rem;
 		font-size: 1.5rem;
-		margin-bottom: 1.2rem;
+		margin-bottom: 1.6rem;
 	}
 	.log-symbol {
 		width: 28px;
@@ -43,9 +103,42 @@ const { title, releaseYear, editingApproach } = work.data;
 	article .year {
 		font-weight: 400;
 	}
+	article .lede {
+		color: var(--muted);
+		font-size: 1.05rem;
+		font-style: italic;
+		margin-bottom: 2rem;
+	}
+	article h2 {
+		font-size: 1.2rem;
+		margin: 2.2rem 0 1rem;
+		padding-top: 1.6rem;
+		border-top: 1px solid var(--border);
+	}
+	article h2:first-of-type {
+		margin-top: 0;
+		padding-top: 0;
+		border-top: none;
+	}
+	article h3 {
+		color: var(--heading);
+		font-size: 1rem;
+		margin: 1.6rem 0 0.7rem;
+	}
 	article p {
 		color: var(--fg);
 		font-size: 1rem;
-		max-width: 640px;
+		line-height: 1.8;
+		margin: 0 0 1rem;
+	}
+	article ol {
+		color: var(--fg);
+		font-size: 1rem;
+		line-height: 1.8;
+		margin: 0 0 1.2rem;
+		padding-left: 1.3rem;
+	}
+	article ol li + li {
+		margin-top: 0.4rem;
 	}
 </style>
