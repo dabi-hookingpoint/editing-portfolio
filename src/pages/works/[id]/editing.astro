@@ -86,14 +86,14 @@ const firstParagraphIndex = blocks.findIndex((b) => b.type === 'p');
 
 <style>
 	article {
-		max-width: 700px;
+		max-width: 640px;
 	}
 	article h1 {
 		display: flex;
 		align-items: center;
 		gap: 0.6rem;
 		font-size: 1.5rem;
-		margin-bottom: 1.6rem;
+		margin-bottom: 2rem;
 	}
 	.log-symbol {
 		width: 28px;
@@ -105,14 +105,16 @@ const firstParagraphIndex = blocks.findIndex((b) => b.type === 'p');
 	}
 	article .lede {
 		color: var(--muted);
-		font-size: 1.05rem;
+		font-size: 1.2rem;
+		line-height: 1.7;
 		font-style: italic;
-		margin-bottom: 2rem;
+		margin-bottom: 2.8rem;
 	}
 	article h2 {
-		font-size: 1.2rem;
-		margin: 2.2rem 0 1rem;
-		padding-top: 1.6rem;
+		font-size: 1.4rem;
+		line-height: 1.5;
+		margin: 3.4rem 0 1.4rem;
+		padding-top: 2.4rem;
 		border-top: 1px solid var(--border);
 	}
 	article h2:first-of-type {
@@ -122,23 +124,25 @@ const firstParagraphIndex = blocks.findIndex((b) => b.type === 'p');
 	}
 	article h3 {
 		color: var(--heading);
-		font-size: 1rem;
-		margin: 1.6rem 0 0.7rem;
+		font-size: 1.15rem;
+		line-height: 1.5;
+		margin: 2.4rem 0 1.1rem;
 	}
 	article p {
 		color: var(--fg);
-		font-size: 1rem;
-		line-height: 1.8;
-		margin: 0 0 1rem;
+		font-size: 1.15rem;
+		line-height: 2;
+		letter-spacing: -0.005em;
+		margin: 0 0 1.6rem;
 	}
 	article ol {
 		color: var(--fg);
-		font-size: 1rem;
-		line-height: 1.8;
-		margin: 0 0 1.2rem;
-		padding-left: 1.3rem;
+		font-size: 1.15rem;
+		line-height: 1.9;
+		margin: 0 0 1.8rem;
+		padding-left: 1.4rem;
 	}
 	article ol li + li {
-		margin-top: 0.4rem;
+		margin-top: 0.7rem;
 	}
 </style>
