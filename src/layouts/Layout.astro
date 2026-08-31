@@ -577,5 +577,141 @@ const currentPath = Astro.url.pathname;
 				});
 			});
 		</script>
+
+		<div class="chat-widget" id="chat-widget">
+			<div class="chat-widget-panel" id="chat-widget-panel">
+				<div class="chat-widget-header">
+					<span>후킹포인트 문의 챗봇</span>
+					<div class="chat-widget-header-actions">
+						<a href="https://dabi-hookingpoint.github.io/pd-rag-chatbot/" target="_blank" rel="noopener" aria-label="새 창에서 열기" title="새 창에서 열기">↗</a>
+						<button type="button" id="chat-widget-close" aria-label="닫기">✕</button>
+					</div>
+				</div>
+				<iframe
+					id="chat-widget-iframe"
+					title="후킹포인트 문의 챗봇"
+					src="about:blank"
+					data-src="https://dabi-hookingpoint.github.io/pd-rag-chatbot/"
+					loading="lazy"
+				></iframe>
+			</div>
+			<button type="button" class="chat-widget-bubble" id="chat-widget-bubble" aria-label="문의 챗봇 열기">
+				<img src="/chatbot-widget-icon.png" alt="" />
+			</button>
+		</div>
+
+		<style>
+			.chat-widget {
+				position: fixed;
+				right: 24px;
+				bottom: 24px;
+				z-index: 2000;
+				display: flex;
+				flex-direction: column;
+				align-items: flex-end;
+				gap: 12px;
+			}
+			.chat-widget-bubble {
+				width: 58px;
+				height: 58px;
+				border-radius: 50%;
+				border: none;
+				background: var(--accent);
+				box-shadow: 0 6px 20px rgba(19, 77, 236, 0.45);
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 0;
+				transition: transform 0.15s ease;
+			}
+			.chat-widget-bubble:hover {
+				transform: scale(1.06);
+			}
+			.chat-widget-bubble img {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				object-fit: cover;
+			}
+			.chat-widget-panel {
+				display: none;
+				flex-direction: column;
+				width: min(380px, calc(100vw - 32px));
+				height: min(620px, calc(100vh - 120px));
+				background: var(--bg);
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 16px;
+				overflow: hidden;
+				box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+			}
+			.chat-widget.is-open .chat-widget-panel {
+				display: flex;
+			}
+			.chat-widget-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 0.8rem 1rem;
+				background: var(--accent);
+				color: #fff;
+				font-weight: 700;
+				font-size: 0.9rem;
+				flex-shrink: 0;
+			}
+			.chat-widget-header-actions {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+			}
+			.chat-widget-header-actions a,
+			.chat-widget-header-actions button {
+				color: #fff;
+				background: none;
+				border: none;
+				cursor: pointer;
+				font-size: 1rem;
+				line-height: 1;
+				text-decoration: none;
+				opacity: 0.9;
+			}
+			.chat-widget-header-actions a:hover,
+			.chat-widget-header-actions button:hover {
+				opacity: 1;
+			}
+			.chat-widget-panel iframe {
+				flex: 1;
+				border: none;
+				width: 100%;
+			}
+			@media (max-width: 480px) {
+				.chat-widget {
+					right: 16px;
+					bottom: 16px;
+				}
+			}
+		</style>
+
+		<script>
+			const widget = document.getElementById('chat-widget');
+			const bubble = document.getElementById('chat-widget-bubble');
+			const closeBtn = document.getElementById('chat-widget-close');
+			const iframe = document.getElementById('chat-widget-iframe') as HTMLIFrameElement | null;
+
+			function openWidget() {
+				widget?.classList.add('is-open');
+				if (iframe && iframe.src === 'about:blank') {
+					iframe.src = iframe.dataset.src || '';
+				}
+			}
+			function closeWidget() {
+				widget?.classList.remove('is-open');
+			}
+
+			bubble?.addEventListener('click', () => {
+				widget?.classList.contains('is-open') ? closeWidget() : openWidget();
+			});
+			closeBtn?.addEventListener('click', closeWidget);
+		</script>
 	</body>
 </html>
